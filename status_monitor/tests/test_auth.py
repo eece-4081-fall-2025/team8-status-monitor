@@ -84,7 +84,7 @@ class UserRegistrationTests(TestCase):
         self.client.login(username='existing', password='pass123')
         response = self.client.get(self.register_url)
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse('dashboard'))
+        self.assertEqual(response.url, reverse('home'))
 
 
 class UserLoginTests(TestCase):
@@ -151,18 +151,18 @@ class UserLoginTests(TestCase):
             'password': 'SecurePass123!'
         }
         response = self.client.post(
-            f"{self.login_url}?next=/dashboard/",
+            f"{self.login_url}?next=/home/",
             data
         )
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '/dashboard/')
+        self.assertEqual(response.url, '/home/')
     
     def test_login_redirects_when_authenticated(self):
         """Test authenticated users redirected from login page"""
         self.client.login(username='testuser', password='SecurePass123!')
         response = self.client.get(self.login_url)
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse('dashboard'))
+        self.assertEqual(response.url, reverse('home'))
 
 
 class UserLogoutTests(TestCase):
@@ -212,30 +212,30 @@ class ProtectedViewTests(TestCase):
     
     def setUp(self):
         self.client = Client()
-        self.dashboard_url = reverse('dashboard')
+        self.home_url = reverse('home')
         self.user = User.objects.create_user(
             username='testuser',
             password='SecurePass123!'
         )
     
-    def test_dashboard_requires_login(self):
-        """Test dashboard redirects to login when not authenticated"""
-        response = self.client.get(self.dashboard_url)
+    def test_home_requires_login(self):
+        """Test home redirects to login when not authenticated"""
+        response = self.client.get(self.home_url)
         self.assertEqual(response.status_code, 302)
         self.assertIn('/login/', response.url)
         self.assertIn('next=', response.url)
     
-    def test_dashboard_accessible_when_logged_in(self):
-        """Test dashboard is accessible when logged in"""
+    def test_home_accessible_when_logged_in(self):
+        """Test home is accessible when logged in"""
         self.client.login(username='testuser', password='SecurePass123!')
-        response = self.client.get(self.dashboard_url)
+        response = self.client.get(self.home_url)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Dashboard')
+        self.assertContains(response, 'home')
     
     def test_protected_view_preserves_next_parameter(self):
         """Test redirect to login preserves original URL"""
-        response = self.client.get(self.dashboard_url)
-        self.assertIn(f'next={self.dashboard_url}', response.url)
+        response = self.client.get(self.home_url)
+        self.assertIn(f'next={self.home_url}', response.url)
 
 
 class UserSessionTests(TestCase):
@@ -253,11 +253,11 @@ class UserSessionTests(TestCase):
         self.client.login(username='testuser', password='SecurePass123!')
         
         # First request
-        response1 = self.client.get(reverse('dashboard'))
+        response1 = self.client.get(reverse('home'))
         self.assertTrue(response1.wsgi_request.user.is_authenticated)
         
         # Second request
-        response2 = self.client.get(reverse('dashboard'))
+        response2 = self.client.get(reverse('home'))
         self.assertTrue(response2.wsgi_request.user.is_authenticated)
         self.assertEqual(
             response1.wsgi_request.user.id,
