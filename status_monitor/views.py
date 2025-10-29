@@ -22,3 +22,21 @@ def register(request):
     else:
         form = UserCreationForm()
     return render(request, 'todo/register.html', {'form': form, 'title': 'Create Account'})
+
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect(reverse('dashboard'))
+    
+    if request.method == 'POST':
+        username = request.POST.get('username', '')
+        password = request.POST.get('password', '')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            auth_login(request, user)
+            return redirect(reverse('dashboard'))
+        else:
+            error_message = "Invalid username or password."
+            return render(request, 'todo/login.html', {'error_message': error_message, 'title': 'Login'})
+        
+    return render(request, 'todo/login.html', {'title': 'Login'})
+
