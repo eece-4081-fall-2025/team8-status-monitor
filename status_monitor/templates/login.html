@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+</head>
+        <body>
+            <h1>Login</h1>
+
+            {% if error %}
+                <div class="error">Invalid</div>
+                <div>{{ error }}</div>
+            {% endif %}
+        <form method = "post" action = "?{% if next %}next={{ next }}{% end if %}">
+            {% csrf_token %}
+            <label>Username: <input type="text" name="username"></label><br>
+            <label>Password: <input type="password" name="password"></label><br>
+            {% if next %}
+                <input type="hidden" name="next" value="{{ next }}">
+            {% endif %}
+            <button type="submit">Login</button>
+        </form>
+    </body>
+</html>
