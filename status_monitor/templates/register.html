@@ -1,25 +1,12 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Create Account</title>
-    </head>
-    <body>
-        <h1>Create Account</h1>
-        <form method='post'>
-            {% csrf_token %}
-            {( form.as_p )}
-            <button type="submit">Create Account</button>
-        </form>
-
-        {% if form.erros %}
-            <div class="errors">
-                {% for fiels, errs in form.errors.items %}
-                <strong>{{ field }}</strong>
-                {% for e in errs %}
-                    <div>{{ e }}</div>
-                {% endfor %}
-                {% endfor %}
-            </div>
-        {% endif %}
-    </body>
+<head><title>Create Account</title></head>
+<body>
+<h1>Create Account</h1>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Create Account</button>
+</form>
+</body>
 </html>
