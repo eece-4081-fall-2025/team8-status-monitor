@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
@@ -21,22 +22,40 @@ def register(request):
             return redirect(reverse('dashboard'))
     else:
         form = UserCreationForm()
+        
     return render(request, 'todo/register.html', {'form': form, 'title': 'Create Account'})
 
 def login_view(request):
     if request.user.is_authenticated:
         return redirect(reverse('dashboard'))
     
+    context = {}
+    next_url = request.GET.get('next', '')
+    
     if request.method == 'POST':
         username = request.POST.get('username', '')
         password = request.POST.get('password', '')
         user = authenticate(request, username=username, password=password)
-        if user is not None:
+        if user is not None and user.is_active:
             auth_login(request, user)
+            next_from_post = request.GET.get('next') or request.POST.get('next') or ''
+            if next_from_post:
+                return redirect(next_from_post)
             return redirect(reverse('dashboard'))
         else:
-            error_message = "Invalid username or password."
-            return render(request, 'todo/login.html', {'error_message': error_message, 'title': 'Login'})
+            context['error'] = "Invalid username or password."
         
-    return render(request, 'todo/login.html', {'title': 'Login'})
+    context.setdefault('next', next_url)
+    return render(request, 'todo/login.html', context)
+        
+def logout_view(request):
+    if request.method == 'GET':
+        return render(request, 'todo/logout_confirm.html')
+    if request.method == 'POST':
+        auth_logout(request)
+        messages.success(request, "You have been logged out.")
+        return redirect(reverse('home'))
 
+@login_required(login_url='login')
+def dashboard(request):
+    return render(request, 'todo/dashboard.html', {'title': 'Dashboard'})
