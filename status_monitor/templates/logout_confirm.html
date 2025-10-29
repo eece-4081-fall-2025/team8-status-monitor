@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Logout</title>
+</head>
+<body>
+  <h1>logout</h1> <!-- lower-case 'logout' to satisfy test assertContains -->
+  <p>Are you sure you want to logout?</p>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit">Yes, logout</button>
+    <a href="{% url 'dashboard' %}">Cancel</a>
+  </form>
+</body>
+</html>
