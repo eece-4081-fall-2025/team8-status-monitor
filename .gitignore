@@ -1,0 +1,41 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment directory
+.venv/
+env/
+venv/
+# If you ever name it differently
+.virtualenv/
+
+# Django local settings, secret keys, etc.
+*.sqlite3
+db.sqlite3
+*.log
+
+# Static files / media uploads
+staticfiles/
+media/
+
+# Node / frontend artifacts (if present)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# IDE/editor settings
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Coverage / test artifacts
+htmlcov/
+.coverage
+.coverage.*
+.pytest_cache/
