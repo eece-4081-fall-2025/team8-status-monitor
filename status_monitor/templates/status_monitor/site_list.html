@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Sites{% endblock %}
+{% block content %}
+  <h2>Monitored Sites</h2>
+  <a href="{% url 'site_create' %}" class="btn btn-primary">+ Add Site</a>
+  <ul>
+    {% for site in sites %}
+      <li>
+        <strong>{{ site.name }}</strong> - <a href="{{ site.url }}">{{ site.url }}</a>
+        (<a href="{% url 'site_edit' site.pk %}">Edit</a> |
+         <a href="{% url 'site_delete' site.pk %}">Delete</a>)
+      </li>
+    {% empty %}
+      <p>No sites yet.</p>
+    {% endfor %}
+  </ul>
+{% endblock %}
