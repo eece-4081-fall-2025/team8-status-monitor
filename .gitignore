@@ -39,3 +39,6 @@ htmlcov/
 .coverage
 .coverage.*
 .pytest_cache/
+
+#Test output for troubleshooting
+test_output.txt
