@@ -230,7 +230,7 @@ class ProtectedViewTests(TestCase):
         self.client.login(username='testuser', password='SecurePass123!')
         response = self.client.get(self.home_url)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'home')
+        self.assertContains(response, 'Home')
     
     def test_protected_view_preserves_next_parameter(self):
         """Test redirect to login preserves original URL"""

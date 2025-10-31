@@ -1,9 +1,11 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.urls import reverse
+from .models import Site
+from .forms import SiteForm
 
 #Begin user registration and authentication views
 def register(request):
@@ -56,3 +58,40 @@ def logout_view(request):
 @login_required(login_url='login')
 def home(request):
     return render(request, 'status_monitor/home.html')
+
+#Views for adding and editing sites
+@login_required(login_url='login')
+def site_list(request):
+    sites = Site.objects.all()
+    return render(request, 'status_monitor/site_list.html', {'sites': sites})
+
+@login_required(login_url='login')
+def site_create(request):
+    if request.method == 'POST':
+        form = SiteForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect(reverse('site_list'))
+    else:
+        form = SiteForm()
+    return render(request, 'status_monitor/site_form.html', {'form': form, 'title': 'Add Site'})
+
+@login_required(login_url='login')
+def site_edit(request, pk):
+    site = get_object_or_404(Site, pk=pk)
+    if request.method == 'POST':
+        form = SiteForm(request.POST, instance=site)
+        if form.is_valid():
+            form.save()
+            return redirect(reverse('site_list'))
+    else:
+        form = SiteForm(instance=site)
+    return render(request, 'status_monitor/site_form.html', {'form': form, 'title': 'Edit Site'})
+
+@login_required(login_url='login')
+def site_delete(request, pk):
+    site = get_object_or_404(Site, pk=pk)
+    if request.method == 'POST':
+        site.delete()
+        return redirect(reverse('site_list'))
+    return render(request, 'status_monitor/site_confirm_delete.html', {'site': site})
