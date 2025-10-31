@@ -5,13 +5,13 @@ from status_monitor.models import Site
 
 class SiteManagementTest(TestCase):
     
-    def SetUp(self):
+    def setUp(self):
         self.client = Client()
         self.user = User.objects.create_user(
             username='testuser',
             password='SecurePass123!'
         )
-        self.client.login(username=self.user.username,password = self.user.password)
+        self.client.login(username=self.user.username,password = 'SecurePass123!')
         
         self.list_url = reverse('site_list')
         self.create_url = reverse('site_create')
@@ -67,5 +67,5 @@ class SiteManagementTest(TestCase):
     def test_unauthenticated_redirect(self):
         self.client.logout()
         response = self.client.get(self.list_url)
-        self.asserEqual(response.status_code,302)
+        self.assertEqual(response.status_code,302)
         self.assertIn(reverse('login'),response.url)
