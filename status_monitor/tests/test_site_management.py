@@ -39,9 +39,33 @@ class SiteManagementTest(TestCase):
         data= {
             'name': 'New Site',
             'url': 'https://newsite.com',
-            'description': 'A brand new site!',
+            'description': 'A brand new test site!',
             'is_active': True
         }
-        response = self.client.post(self.create_url, data)
+        response = self.client.post(self.create_url, data, follow=True)
         self.assertEqual(Site.objects.count(), 2)
-        self.assertContains(response, 'new site')
+        self.assertContains(response, 'New Site')
+
+    def test_can_edit_existing_site(self):
+        data = {
+            'name': 'Updated Site',
+            'url': 'https://updatedsite.com',
+            'description': 'An updated test site!',
+            'is_active': False 
+        }
+        response = self.client.post(self.edit_url, data, follow=True)
+        self.site.refresh_from_db()
+        self.assertEqual(self.site.name, 'Updated Site')
+        self.assertFalse(self.site.is_active)
+        self.assertContains(response, 'Updated Site')
+    
+    def test_can_delete_site(self):
+        response = self.client.post(self.delete_url, follow=True)
+        self.assertEqual(Site.objects.count(), 0)
+        self.assertContains(response, 'No sites yet.')
+        
+    def test_unauthenticated_redirect(self):
+        self.client.logout()
+        response = self.client.get(self.list_url)
+        self.asserEqual(response.status_code,302)
+        self.assertIn(reverse('login'),response.url)
