@@ -11,5 +11,10 @@
     {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
     <button type="submit">Login</button>
 </form>
+<p>
+    <a href="{% url 'register' %}">
+        <button type="button">Register</button>
+    </a>
+</p>
 </body>
 </html>
