@@ -5,10 +5,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.urls import reverse
 
-def home(request):
-    return render(request, 'home.html')
-
-
 #Begin user registration and authentication views
 def register(request):
     if request.user.is_authenticated:
@@ -51,11 +47,12 @@ def login_view(request):
 def logout_view(request):
     if request.method == 'GET':
         return render(request, 'status_monitor/logout_confirm.html')
+    
     if request.method == 'POST':
         auth_logout(request)
         messages.success(request, "You have been logged out.")
-        return redirect(reverse('home'))
+        return redirect(reverse('login'))
 
 @login_required(login_url='login')
 def home(request):
-    return render(request, 'status_monitor/home.html', {'title': 'home'})
+    return render(request, 'status_monitor/home.html')
