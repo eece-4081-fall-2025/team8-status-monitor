@@ -8,5 +8,8 @@
     {{ form.as_p }}
     <button type="submit">Register</button>
 </form>
+<form action="{% url 'login' %}" method="get" style="display:inline;">
+    <button type="submit">Cancel</button>
+</form>
 </body>
 </html>

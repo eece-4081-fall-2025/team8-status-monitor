@@ -3,4 +3,7 @@
 {% block content %}
     <h1>Home</h1>
     <p>Welcome to the status monitor</p>
+    <form action="{% url 'logout' %}" method="post" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit">Logout</button>
 {% endblock %}
