@@ -57,7 +57,7 @@ def logout_view(request):
 
 @login_required(login_url='login')
 def home(request):
-    return render(request, 'status_monitor/home.html')
+    return redirect('status_page')
 
 #Views for adding and editing sites
 @login_required(login_url='login')
@@ -95,3 +95,13 @@ def site_delete(request, pk):
         site.delete()
         return redirect(reverse('site_list'))
     return render(request, 'status_monitor/site_confirm_delete.html', {'site': site})
+
+#for the status, maintenace and incidents
+def status_page(request):
+    return render(request, "status_monitor/status_page.html")
+
+def maintenance_page(request):
+    return render(request, "status_monitor/maintenance_page.html")
+
+def incidents_page(request):
+    return render(request, "status_monitor/incidents_page.html")

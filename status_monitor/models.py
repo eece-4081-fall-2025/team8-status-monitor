@@ -6,6 +6,9 @@ class Site(models.Model):
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
     last_checked = models.DateTimeField(null=True,blank = True)
-    
+
+    #added dashboard fields
+    status = models.CharField(max_length=10, choices=[('UP', 'UP'), ('DOWN', 'DOWN')], default='UP')
+    response_ime = models.FloatField(default=0.0) #in seconds
     def __str__(self):
         return self.name

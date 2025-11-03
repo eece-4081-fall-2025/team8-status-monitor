@@ -4,18 +4,23 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>{% block title %} App Monitor{% endblock %}</title>
+        <title>{% block title %}Status Monitor{% endblock %}</title>
         <link rel="stylesheet" href="{% static 'main.css' %}">
     </head>
     <body>
-        <header>
+        <header class="header">
             <h1>Status Monitor</h1>
-            <nav>
-                <a href="/">Home</a>
+            <nav class="navbar">
+                <a href="/status">Status</a>
+                <a href="/maintenance">Maintenance</a>
+                <a href="/incidents">Incident Report</a>
+                <a href="/logout">Logout</a>
             </nav>
         </header>
+        <main class="content-container">
         {% block content %}
         {% endblock %}
+        </main>
     </body>
    
 </html>
