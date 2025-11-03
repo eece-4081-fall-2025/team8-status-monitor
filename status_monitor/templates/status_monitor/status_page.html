@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Status Dashboard{% endblock %}
+{% block content %}
+
+<h2>Dashboard</h2>
+<table>
+    <tr>
+        <th>Name</th>
+        <th>URL</th>
+        <th>Status</th>
+        <th>Response Time</th>
+    </tr>
+    {% for site in sites %}
+    <tr>
+        <td>{{ site.name }}</td>
+        <td>{{ site.url }}</td>
+        <td>{{ site.status }}</td>
+        <td>{{ site.response_time }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}
