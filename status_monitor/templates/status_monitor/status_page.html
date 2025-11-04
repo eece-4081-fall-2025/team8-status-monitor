@@ -11,9 +11,15 @@
         <th>Response Time</th>
     </tr>
     {% for site in sites %}
-    <tr>
-        <td>{{ site.name }}</td>
+    <tr class="{% if site.is_up %}up{% else %}down{% endif %}">
         <td>{{ site.url }}</td>
+        <td>
+            {% if site.is_up %}
+                up
+            {% else %}
+                down
+            {% endif %}
+        </td>
         <td>{{ site.status }}</td>
         <td>{{ site.response_time }}</td>
     </tr>

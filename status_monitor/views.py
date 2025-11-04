@@ -97,8 +97,11 @@ def site_delete(request, pk):
     return render(request, 'status_monitor/site_confirm_delete.html', {'site': site})
 
 #for the status, maintenace and incidents
+@login_required(login_url='login')
 def status_page(request):
-    return render(request, "status_monitor/status_page.html")
+    sites = Site.objects.all().order_by('url')
+    return render(request, "status_monitor/status_page.html", {"sites": sites})
+
 
 def maintenance_page(request):
     return render(request, "status_monitor/maintenance_page.html")
