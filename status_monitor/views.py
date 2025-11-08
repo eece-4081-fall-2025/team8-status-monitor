@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate, login as auth_login, logout as aut
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone,localtime
 from datetime import timedelta
 from .models import  MonitoredSite, SiteCheckResult
 from .forms import MonitoredSiteForm
@@ -99,14 +99,17 @@ def status_page(request):
 
     for site in sites:
         checks = SiteCheckResult.objects.filter(site=site).order_by('-timestamp')[:10]
+        for c in checks:
+            c.localtimestamp = localtime(c.timestamp)
         latest_check = checks.first() if checks else None
         site_data.append({
-            'site': site,
-            'latest_check': latest_check,
-            'history': checks
+            'site' : site,
+            'latest_check' : latest_check,
+            'history' : checks
         })
         
     return render(request, "status_monitor/status_page.html", {"site_data": site_data})
+
 
 def maintenance_page(request):
     return render(request, "status_monitor/maintenance_page.html")
