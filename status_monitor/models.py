@@ -10,7 +10,7 @@ class Site(models.Model):
 
     #added dashboard fields
     status = models.CharField(max_length=10, choices=[('UP', 'UP'), ('DOWN', 'DOWN')], default='UP')
-    response_ime = models.FloatField(default=0.0) #in seconds
+    response_time = models.FloatField(default=0.0) #in seconds
     def __str__(self):
         return self.name
     
@@ -20,6 +20,8 @@ class MonitoredSite(models.Model):
     check_frequency = models.IntegerField(default = 5,help_text="Frequency (in minutes) to check site status")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name = 'monitored_sites')
 
+    class Meta:
+        unique_together = ('user', 'url')
     def __str__(self):
         return self.name
     

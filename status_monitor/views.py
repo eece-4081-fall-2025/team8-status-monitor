@@ -77,7 +77,7 @@ def site_create(request):
             site.save()
             return redirect(reverse('status_page'))
     else:
-        form = MonitoredSiteForm()
+        form = MonitoredSiteForm(user=request.user)
     return render(request, 'status_monitor/site_form.html', {'form': form, 'title': 'Add Site'})
 
 @login_required(login_url='login')
@@ -93,8 +93,8 @@ def site_edit(request, pk):
     return render(request, 'status_monitor/site_form.html', {'form': form, 'title': 'Edit Site'})
 
 @login_required(login_url='login')
-def site_delete(request, pk):
-    site = get_object_or_404(MonitoredSite, pk=pk, user=request.user)
+def site_delete(request, site_id):
+    site = get_object_or_404(MonitoredSite, id=site_id, user=request.user)
     if request.method == 'POST':
         site.delete()
         return redirect(reverse('status_page'))
@@ -102,7 +102,7 @@ def site_delete(request, pk):
 
 @login_required(login_url='login')
 def status_page(request):
-    sites = MonitoredSite.objects.filter(user=request.user).order_by('sitecheckresult__is_up','-id')
+    sites = MonitoredSite.objects.filter(user=request.user).order_by('check_results__is_up','-id')
     site_data = []
 
     for site in sites:
@@ -111,7 +111,7 @@ def status_page(request):
             'site': site,
             'latest_check': latest_check
         })
-
+        
     return render(request, "status_monitor/status_page.html", {"site_data": site_data})
 
 def maintenance_page(request):

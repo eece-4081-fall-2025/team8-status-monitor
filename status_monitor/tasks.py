@@ -4,6 +4,7 @@ from django.utils import timezone
 from status_monitor.models import MonitoredSite, SiteCheckResult
 import requests, time
 from django.db.utils import OperationalError
+import sys
 
 def check_sites():
     monitored_sites = MonitoredSite.objects.all()
@@ -12,7 +13,7 @@ def check_sites():
         try:
             response = requests.get(site.url, timeout=10)
             response_time = time.time() - start_time
-            is_up = response.status_code == 200
+            is_up = 200 <= response.status_code < 400
             status_code = response.status_code
         except requests.RequestException:
             response_time = time.time() - start_time
@@ -37,7 +38,8 @@ def start_scheduler():
             name='check_sites_job',
             replace_existing=True
         )
-        scheduler.start()
-        print("✅ APScheduler started successfully!")
+        if "runserver" in sys.argv:
+            scheduler.start()
+            print("✅ APScheduler started successfully!")
     except OperationalError:
         print("⚠️ Database not ready, APScheduler will start after migrations.")
