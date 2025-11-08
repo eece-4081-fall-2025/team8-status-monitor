@@ -16,8 +16,8 @@ class Site(models.Model):
 class MonitoredSite(models.Model):
     name = models.CharField(max_length = 100)
     url = models.URLField(unique = True)
-    check_frequency = models.IntegerField(help_text="Frequency (in minutes) to check site status")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name = 'monitoreed_sites')
+    check_frequency = models.IntegerField(default = 5,help_text="Frequency (in minutes) to check site status")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name = 'monitored_sites')
     
     def __str__(self):
         return self.name
