@@ -29,24 +29,16 @@ def login_view(request):
     if request.user.is_authenticated:
         return redirect(reverse('home'))
     
-    context = {}
-    next_url = request.GET.get('next', '')
-    
     if request.method == 'POST':
-        username = request.POST.get('username', '')
-        password = request.POST.get('password', '')
+        username = request.POST.get('username')
+        password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
-        if user is not None and user.is_active:
+        if user:
             auth_login(request, user)
-            next_from_post = request.GET.get('next') or request.POST.get('next') or ''
-            if next_from_post:
-                return redirect(next_from_post)
-            return redirect(reverse('home'))
-        else:
-            context['error'] = "Invalid username or password."
+            return redirect(request.POST.get('next') or 'home')
+        messages.error(request, "Invalid username or password.")
         
-    context.setdefault('next', next_url)
-    return render(request, 'status_monitor/login.html', context)
+    return render(request, 'status_monitor/login.html', {'next': request.GET.get('next', '')})
         
 def logout_view(request):
     if request.method == 'GET':
@@ -102,7 +94,7 @@ def site_delete(request, pk):
 
 @login_required(login_url='login')
 def status_page(request):
-    sites = MonitoredSite.objects.filter(user=request.user).order_by('check_results__is_up','-id').distinct()
+    sites = MonitoredSite.objects.filter(user=request.user).order_by('-id').distinct()
     site_data = []
 
     for site in sites:
@@ -123,7 +115,7 @@ def incidents_page(request):
 @login_required(login_url='login')
 def site_history(request,pk):
     site = get_object_or_404(MonitoredSite,pk=pk, user=request.user)
-    checks = SiteCheckResult.objects.filters(site=site).order_by('timestamp')
+    checks = SiteCheckResult.objects.filter(site=site).order_by('timestamp')
     
     total_checks = checks.count()
     uptime = 0
