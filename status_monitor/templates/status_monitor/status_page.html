@@ -2,26 +2,34 @@
 {% block title %}Status Dashboard{% endblock %}
 {% block content %}
 
-<h2>Dashboard</h2>
+<h2>Status Dashboard</h2>
 <table>
     <tr>
         <th>Name</th>
         <th>URL</th>
-        <th>Status</th>
-        <th>Response Time</th>
+        <th>Last Checked</th>
+        <th>Status Code</th>
+        <th>Response Time (s)</th>
+        <th>Up?</th>
     </tr>
-    {% for site in sites %}
-    <tr class="{% if site.is_up %}up{% else %}down{% endif %}">
-        <td>{{ site.url }}</td>
+    {% for item in site_data %}
+    <tr class="{% if item.latest_check and item.latest_check.is_up %}up{% else %}down{% endif %}">
+        <td>{{ item.site.name }}</td>
+        <td><a href="{{ item.site.url }}" target="_blank">{{ item.site.url }}</a></td>
+        <td>{{ item.latest_check.timestamp|default:"Never" }}</td>
+        <td>{{ item.latest_check.status_code|default:"—" }}</td>
+        <td>{{ item.latest_check.response_time|floatformat:2|default:"—" }}</td>
         <td>
-            {% if site.is_up %}
-                up
+            {% if item.latest_check and item.latest_check.is_up %}
+                ✅ Up
             {% else %}
-                down
+                ❌ Down
             {% endif %}
         </td>
-        <td>{{ site.status }}</td>
-        <td>{{ site.response_time }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="6">No monitored sites yet.</td>
     </tr>
     {% endfor %}
 </table>

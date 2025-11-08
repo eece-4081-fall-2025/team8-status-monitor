@@ -4,6 +4,8 @@ from django.contrib.auth import authenticate, login as auth_login, logout as aut
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.urls import reverse
+from django.utils import timezone
+from datetime import timedelta
 from .models import Site, MonitoredSite, SiteCheckResult
 from .forms import SiteForm
 
@@ -96,12 +98,19 @@ def site_delete(request, pk):
         return redirect(reverse('site_list'))
     return render(request, 'status_monitor/site_confirm_delete.html', {'site': site})
 
-#for the status, maintenace and incidents
 @login_required(login_url='login')
 def status_page(request):
-    sites = Site.objects.all().order_by('url')
-    return render(request, "status_monitor/status_page.html", {"sites": sites})
+    sites = MonitoredSite.objects.filter(user=request.user).order_by('url')
+    site_data = []
 
+    for site in sites:
+        latest_check = SiteCheckResult.objects.filter(site=site).order_by('-timestamp').first()
+        site_data.append({
+            'site': site,
+            'latest_check': latest_check
+        })
+
+    return render(request, "status_monitor/status_page.html", {"site_data": site_data})
 
 def maintenance_page(request):
     return render(request, "status_monitor/maintenance_page.html")
