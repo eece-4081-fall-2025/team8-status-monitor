@@ -3,6 +3,7 @@ from django_apscheduler.jobstores import DjangoJobStore
 from django.utils import timezone
 from status_monitor.models import MonitoredSite, SiteCheckResult
 import requests, time
+from django.db.utils import OperationalError
 
 def check_sites():
     monitored_sites = MonitoredSite.objects.all()
@@ -26,7 +27,17 @@ def check_sites():
             is_up=is_up
         )
 def start_scheduler():
-    scheduler = BackgroundScheduler()
-    scheduler.add_jobstore(DjangoJobStore(), "default")
-    scheduler.add_job(check_sites, 'interval', minutes=5, name='check_sites_job', jobstore='default')
-    scheduler.start()
+    try:
+        scheduler = BackgroundScheduler()
+        scheduler.add_jobstore(DjangoJobStore(), 'default')
+        scheduler.add_job(
+            check_sites,
+            'interval',
+            minutes=5,
+            name='check_sites_job',
+            replace_existing=True
+        )
+        scheduler.start()
+        print("✅ APScheduler started successfully!")
+    except OperationalError:
+        print("⚠️ Database not ready, APScheduler will start after migrations.")
