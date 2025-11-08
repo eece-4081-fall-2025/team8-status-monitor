@@ -1,12 +1,14 @@
 from django import forms
-from .models import Site
+from .models import MonitoredSite
 
-class SiteForm(forms.ModelForm):
+class MonitoredSiteForm(forms.ModelForm):
     class Meta:
-        model = Site
-        fields = ['name','url','description','is_active']
+        model = MonitoredSite
+        fields = ['name', 'url', 'check_frequency']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'url': forms.URLInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control'}),
-            }
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Site name'}),
+            'url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://example.com'}),
+            'check_frequency': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Check frequency (minutes)'}),
+        }
+
+    # Assign the logged-in user automatically in the view

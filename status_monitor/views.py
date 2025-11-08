@@ -6,8 +6,8 @@ from django.contrib.auth.forms import UserCreationForm
 from django.urls import reverse
 from django.utils import timezone
 from datetime import timedelta
-from .models import Site, MonitoredSite, SiteCheckResult
-from .forms import SiteForm
+from .models import  MonitoredSite, SiteCheckResult
+from .forms import MonitoredSiteForm
 
 #Begin user registration and authentication views
 def register(request):
@@ -64,35 +64,37 @@ def home(request):
 #Views for adding and editing sites
 @login_required(login_url='login')
 def site_list(request):
-    sites = Site.objects.all()
+    sites = MonitoredSite.objects.all()
     return render(request, 'status_monitor/site_list.html', {'sites': sites})
 
 @login_required(login_url='login')
 def site_create(request):
     if request.method == 'POST':
-        form = SiteForm(request.POST)
+        form = MonitoredSiteForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect(reverse('site_list'))
+            site = form.save(commit=False)
+            site.user = request.user
+            site.save()
+            return redirect(reverse('status_page'))
     else:
-        form = SiteForm()
+        form = MonitoredSiteForm()
     return render(request, 'status_monitor/site_form.html', {'form': form, 'title': 'Add Site'})
 
 @login_required(login_url='login')
 def site_edit(request, pk):
-    site = get_object_or_404(Site, pk=pk)
+    site = get_object_or_404(MonitoredSite, pk=pk)
     if request.method == 'POST':
-        form = SiteForm(request.POST, instance=site)
+        form = MonitoredSiteForm(request.POST, instance=site)
         if form.is_valid():
             form.save()
             return redirect(reverse('site_list'))
     else:
-        form = SiteForm(instance=site)
+        form = MonitoredSiteForm(instance=site)
     return render(request, 'status_monitor/site_form.html', {'form': form, 'title': 'Edit Site'})
 
 @login_required(login_url='login')
 def site_delete(request, pk):
-    site = get_object_or_404(Site, pk=pk)
+    site = get_object_or_404(MonitoredSite, pk=pk)
     if request.method == 'POST':
         site.delete()
         return redirect(reverse('site_list'))
