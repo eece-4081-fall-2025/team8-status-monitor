@@ -11,4 +11,8 @@ class MonitoredSiteForm(forms.ModelForm):
             'check_frequency': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Check frequency (minutes)'}),
         }
 
-    # Assign the logged-in user automatically in the view
+    def clean_url(self):
+        url = self.cleaned_date['url']
+        if MonitoredSite.objects.filter(url=url, user=self.initial.get('user')).exists:
+            raise forms.ValidationError("You are already monitoring this site.")
+        return url

@@ -64,13 +64,13 @@ def home(request):
 #Views for adding and editing sites
 @login_required(login_url='login')
 def site_list(request):
-    sites = MonitoredSite.objects.all()
+    sites = MonitoredSite.objects.filter(user=request.user)
     return render(request, 'status_monitor/site_list.html', {'sites': sites})
 
 @login_required(login_url='login')
 def site_create(request):
     if request.method == 'POST':
-        form = MonitoredSiteForm(request.POST)
+        form = MonitoredSiteForm(request.POST, user=request.user)
         if form.is_valid():
             site = form.save(commit=False)
             site.user = request.user
@@ -82,7 +82,7 @@ def site_create(request):
 
 @login_required(login_url='login')
 def site_edit(request, pk):
-    site = get_object_or_404(MonitoredSite, pk=pk)
+    site = get_object_or_404(MonitoredSite, pk=pk,user=request.user)
     if request.method == 'POST':
         form = MonitoredSiteForm(request.POST, instance=site)
         if form.is_valid():
@@ -94,15 +94,15 @@ def site_edit(request, pk):
 
 @login_required(login_url='login')
 def site_delete(request, pk):
-    site = get_object_or_404(MonitoredSite, pk=pk)
+    site = get_object_or_404(MonitoredSite, pk=pk, user=request.user)
     if request.method == 'POST':
         site.delete()
-        return redirect(reverse('site_list'))
+        return redirect(reverse('status_page'))
     return render(request, 'status_monitor/site_confirm_delete.html', {'site': site})
 
 @login_required(login_url='login')
 def status_page(request):
-    sites = MonitoredSite.objects.filter(user=request.user).order_by('url')
+    sites = MonitoredSite.objects.filter(user=request.user).order_by('sitecheckresult__is_up','-id')
     site_data = []
 
     for site in sites:
