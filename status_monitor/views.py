@@ -98,10 +98,12 @@ def status_page(request):
     site_data = []
 
     for site in sites:
-        latest_check = SiteCheckResult.objects.filter(site=site).order_by('-timestamp').first()
+        checks = SiteCheckResult.objects.filter(site=site).order_by('-timestamp')[:10]
+        latest_check = checks.first() if checks else None
         site_data.append({
             'site': site,
-            'latest_check': latest_check
+            'latest_check': latest_check,
+            'history': checks
         })
         
     return render(request, "status_monitor/status_page.html", {"site_data": site_data})
