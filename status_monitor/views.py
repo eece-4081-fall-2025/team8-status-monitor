@@ -93,8 +93,8 @@ def site_edit(request, pk):
     return render(request, 'status_monitor/site_form.html', {'form': form, 'title': 'Edit Site'})
 
 @login_required(login_url='login')
-def site_delete(request, site_id):
-    site = get_object_or_404(MonitoredSite, id=site_id, user=request.user)
+def site_delete(request, pk):
+    site = get_object_or_404(MonitoredSite, pk=pk, user=request.user)
     if request.method == 'POST':
         site.delete()
         return redirect(reverse('status_page'))
@@ -102,7 +102,7 @@ def site_delete(request, site_id):
 
 @login_required(login_url='login')
 def status_page(request):
-    sites = MonitoredSite.objects.filter(user=request.user).order_by('check_results__is_up','-id')
+    sites = MonitoredSite.objects.filter(user=request.user).order_by('check_results__is_up','-id').distinct()
     site_data = []
 
     for site in sites:
@@ -119,3 +119,26 @@ def maintenance_page(request):
 
 def incidents_page(request):
     return render(request, "status_monitor/incidents_page.html")
+
+@login_required(login_url='login')
+def site_history(request,pk):
+    site = get_object_or_404(MonitoredSite,pk=pk, user=request.user)
+    checks = SiteCheckResult.objects.filters(site=site).order_by('timestamp')
+    
+    total_checks = checks.count()
+    uptime = 0
+    if total_checks > 0:
+        uptime = checks.filter(is_up=True).count() / total_checks * 100
+    
+    timestamps = [c.timestamp.strftime("%Y-%m-%d %H:%M") for c in checks]
+    response_times = [float(c.response_time or 0) for c in checks]
+    status_points = ['Up' if c.is_up else "Down" for c in checks]
+    
+    context = { 
+            'site' : site,
+            'uptime' : uptime,
+            'timestamps': timestamps,
+            'response_times': response_times,
+            'status_points': status_points
+            }
+    return render(request, 'status_monitor/site_history.html',context)

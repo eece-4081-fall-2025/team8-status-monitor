@@ -6,6 +6,8 @@ import requests, time
 from django.db.utils import OperationalError
 import sys
 
+MAX_RETRIES = 5
+
 def check_sites():
     monitored_sites = MonitoredSite.objects.all()
     for site in monitored_sites:
