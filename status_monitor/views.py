@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm,AuthenticationForm
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.timezone import localtime,now, timedelta
@@ -13,14 +13,14 @@ from .forms import MonitoredSiteForm
 #Begin user registration and authentication views
 def register(request):
     if request.user.is_authenticated:
-        return redirect(reverse('home'))
+        return redirect(reverse('status_page'))
     
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             auth_login(request, user)
-            return redirect(reverse('home'))
+            return redirect(reverse('status_page'))
     else:
         form = UserCreationForm()
         
@@ -28,7 +28,9 @@ def register(request):
 
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect(reverse('home'))
+        return redirect(reverse('status_page'))
+    
+    form = AuthenticationForm(request, data= request.POST or None)
     
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -38,8 +40,12 @@ def login_view(request):
             auth_login(request, user)
             return redirect(request.POST.get('next') or 'home')
         messages.error(request, "Invalid username or password.")
+    context = {
+        'form': form,
+        'next': request.GET.get('next', ''),
+    }
         
-    return render(request, 'status_monitor/login.html', {'next': request.GET.get('next', '')})
+    return render(request, 'status_monitor/login.html', context)
         
 def logout_view(request):
     if request.method == 'GET':
@@ -95,7 +101,7 @@ def site_delete(request, pk):
 
 @login_required(login_url='login')
 def status_page(request):
-    sites = MonitoredSite.objects.filter(user=request.user).order_by('-id').distinct()
+    sites = MonitoredSite.objects.filter(user=request.user).order_by('url').distinct()
     site_data = []
 
     for site in sites:
@@ -119,10 +125,11 @@ def status_page(request):
         
     return render(request, "status_monitor/status_page.html", {"site_data": site_data})
 
-
+@login_required
 def maintenance_page(request):
     return render(request, "status_monitor/maintenance_page.html")
 
+@login_required
 def incidents_page(request):
     return render(request, "status_monitor/incidents_page.html")
 
