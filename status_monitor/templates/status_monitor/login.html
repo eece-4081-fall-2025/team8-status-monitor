@@ -11,6 +11,12 @@
     {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
     <button type="submit">Login</button>
 </form>
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-danger">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
 <p>
     <a href="{% url 'register' %}">
         <button type="button">Register</button>
