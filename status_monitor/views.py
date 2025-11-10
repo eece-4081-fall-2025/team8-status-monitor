@@ -4,8 +4,20 @@ from django.contrib.auth import authenticate, login as auth_login, logout as aut
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.urls import reverse
+from django.http import HttpResponseForbidden # NEW IMPORT
 from .models import Site
 from .forms import SiteForm
+
+# --- New Decorator to Enforce Configuration Permission ---
+def configuration_required(view_func):
+    def _wrapped_view_func(request, *args, **kwargs):
+        # Check if the user is logged in AND their profile allows configuration
+        if not request.user.is_authenticated or not request.user.userprofile.can_configure_sites:
+            messages.error(request, "You no longer have permission to configure sites.")
+            return redirect('site_list')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view_func
+# -------------------------------------------------------
 
 #Begin user registration and authentication views
 def register(request):
@@ -59,24 +71,27 @@ def logout_view(request):
 def home(request):
     return redirect('status_page')
 
-#Views for adding and editing sites
+#Views for adding and editing sites (MODIFIED WITH DECORATOR)
 @login_required(login_url='login')
 def site_list(request):
     sites = Site.objects.all()
     return render(request, 'status_monitor/site_list.html', {'sites': sites})
 
 @login_required(login_url='login')
+@configuration_required # NEW DECORATOR APPLIED
 def site_create(request):
     if request.method == 'POST':
         form = SiteForm(request.POST)
         if form.is_valid():
             form.save()
+            messages.success(request, " Site added successfully!")
             return redirect(reverse('site_list'))
     else:
         form = SiteForm()
     return render(request, 'status_monitor/site_form.html', {'form': form, 'title': 'Add Site'})
 
 @login_required(login_url='login')
+@configuration_required # NEW DECORATOR APPLIED
 def site_edit(request, pk):
     site = get_object_or_404(Site, pk=pk)
     if request.method == 'POST':
@@ -89,6 +104,7 @@ def site_edit(request, pk):
     return render(request, 'status_monitor/site_form.html', {'form': form, 'title': 'Edit Site'})
 
 @login_required(login_url='login')
+@configuration_required # NEW DECORATOR APPLIED
 def site_delete(request, pk):
     site = get_object_or_404(Site, pk=pk)
     if request.method == 'POST':

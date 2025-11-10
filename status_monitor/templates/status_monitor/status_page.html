@@ -3,25 +3,37 @@
 {% block content %}
 
 <h2>Dashboard</h2>
+
+{# ADD THE 'ADD SITE' BUTTON HERE, Controlled by permission #}
+{% if user.is_authenticated and user.userprofile.can_configure_sites %}
+    <a href="{% url 'site_create' %}" class="btn btn-primary">+ Add Site</a>
+{% endif %}
+<br><br>
+
 <table>
     <tr>
         <th>Name</th>
         <th>URL</th>
         <th>Status</th>
         <th>Response Time</th>
+        {# ADD A HEADER FOR THE ACTIONS COLUMN #}
+        <th>Actions</th> 
     </tr>
     {% for site in sites %}
-    <tr class="{% if site.is_up %}up{% else %}down{% endif %}">
+    
+    <tr class="{% if site.is_active and site.status == 'UP' %}up{% else %}down{% endif %}">
+        <td>{{ site.name }}</td>
         <td>{{ site.url }}</td>
+        <td>{{ site.status }}</td>
+        <td>{{ site.response_ime }}</td>
+        
+        {# ADD THE EDIT/DELETE LINKS HERE, Controlled by permission #}
         <td>
-            {% if site.is_up %}
-                up
-            {% else %}
-                down
+            {% if user.is_authenticated and user.userprofile.can_configure_sites %}
+                <a href="{% url 'site_edit' site.pk %}">Edit</a> |
+                <a href="{% url 'site_delete' site.pk %}">Delete</a>
             {% endif %}
         </td>
-        <td>{{ site.status }}</td>
-        <td>{{ site.response_time }}</td>
     </tr>
     {% endfor %}
 </table>
