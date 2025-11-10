@@ -8,9 +8,9 @@
   <canvas id="responseChart" height="100"></canvas>
 
   <h4 class="mt-4">Uptime History</h4>
-  <div id="uptimeBar" style="display:flex; flex-wrap:wrap;">
+  <div id="uptimeBar" class="uptime-bar">
     {% for status in status_points %}
-      <div style="width:6px; height:20px; margin:1px; background-color:{% if status == 'Up' %}#28a745{% else %}#dc3545{% endif %};"></div>
+      <div class="uptime-dot {% if status == 'Up' %}up{% else %}down{% endif %}"></div>
     {% endfor %}
   </div>
 </div>

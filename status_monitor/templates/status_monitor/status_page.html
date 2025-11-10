@@ -29,14 +29,22 @@
                 <a href="{{ item.site.url }}" target="_blank">{{ item.site.url }}</a>
             </td>
            <!-- <td>{{ item.latest_check.timestamp|default:"Never" }}</td> -->
-            <td class="last-checked" data-timestamp="{{ item.latest_check.timestamp|date:'c' }}">
+          <td class="last-checked"
+            {% if item.latest_check %}
+            data-timestamp="{{ item.latest_check.timestamp|date:'c' }}"
+            {% endif %}>
+            {% if item.latest_check %}
                 {{ item.latest_check.timestamp|date:"Y-m-d H:i:s" }}
+            {% else %}
+                Never
+            {% endif %}
             </td>
-
             <td>{{ item.latest_check.status_code|default:"—" }}</td>
             <td>{{ item.latest_check.response_time|floatformat:2|default:"—" }}</td>
             <td>
-                {% if item.latest_check and item.latest_check.is_up %}
+                {% if item.latest_check is none %}
+                    <span class=""text-muted fw bold">
+                {% elif item.latest_check and item.latest_check.is_up %}
                     <span class="text-success fw-bold">✅ Up</span>
                 {% else %}
                     <span class="text-danger fw-bold">❌ Down</span>
@@ -44,10 +52,7 @@
             </td>
             <td>
                 <a href="{% url 'site_edit' item.site.id %}" class="btn btn-sm btn-secondary me-2">Edit</a>
-                <form action="{% url 'site_delete' item.site.id %}" method="post" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-danger">Remove</button>
-                </form>
+                <a href="{% url 'site_delete' item.site.id %}" class="btn btn-sm btn-danger">Remove</a>
             </td>
         </tr>
 
