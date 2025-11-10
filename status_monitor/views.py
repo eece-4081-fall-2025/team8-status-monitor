@@ -4,8 +4,9 @@ from django.contrib.auth import authenticate, login as auth_login, logout as aut
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.urls import reverse
-from django.utils import timezone,localtime
-from datetime import timedelta
+from django.utils import timezone
+from django.utils.timezone import localtime,now, timedelta
+#from datetime import timedelta
 from .models import  MonitoredSite, SiteCheckResult
 from .forms import MonitoredSiteForm
 
@@ -98,14 +99,22 @@ def status_page(request):
     site_data = []
 
     for site in sites:
-        checks = SiteCheckResult.objects.filter(site=site).order_by('-timestamp')[:10]
-        for c in checks:
-            c.localtimestamp = localtime(c.timestamp)
-        latest_check = checks.first() if checks else None
+        checks = SiteCheckResult.objects.filter(site=site).order_by('-timestamp')[:20][::-1]
+        latest_check=checks[-1] if checks else None
+        timestamps = [c.timestamp.strftime("%H:%M") for c in checks]
+        response_times = [c.response_time for c in checks]
+        status_points = ["Up" if c.is_up else "Down" for c in checks]
+        uptime = ((sum(1 for c in checks if c.is_up))/ len(checks) *100) if checks else 0
+        
         site_data.append({
             'site' : site,
             'latest_check' : latest_check,
-            'history' : checks
+            'history' : checks,
+            'timestamps' : timestamps,
+            'response_times': response_times,
+            'status_points' : status_points,
+            'uptime' : uptime,
+            
         })
         
     return render(request, "status_monitor/status_page.html", {"site_data": site_data})

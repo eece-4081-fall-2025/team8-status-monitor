@@ -16,7 +16,7 @@
             <th>URL</th>
             <th>Last Checked</th>
             <th>Status Code</th>
-            <th>Response Time (s)</th>
+            <th>Response Time(s)</th>
             <th>Status</th>
             <th>Actions</th>
         </tr>
@@ -39,44 +39,35 @@
                 {% endif %}
             </td>
             <td>
+                <a href="{% url 'site_edit' item.site.id %}" class="btn btn-sm btn-secondary me-2">Edit</a>
                 <form action="{% url 'site_delete' item.site.id %}" method="post" style="display:inline;">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-sm btn-danger">Remove</button>
                 </form>
             </td>
         </tr>
+
+        <!-- ✅ Keep charts and uptime bar, remove data table -->
         <tr>
-            <td colspan="7" class="p-0">
-                <table class="table mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Timestamp</th>
-                            <th>Status Code</th>
-                            <th>Response Time (s)</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for check in item.history|slice:":10" %}
-                        <tr>
-                            <td>{{ check.timestamp }}</td>
-                            <td>{{ check.status_code }}</td>
-                            <td>{{ check.response_time|floatformat:2 }}</td>
-                            <td>
-                                {% if check.is_up %}
-                                    <span class="text-success fw-bold">✅ Up</span>
-                                {% else %}
-                                    <span class="text-danger fw-bold">❌ Down</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="4" class="text-center text-muted">No historical data available.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <td colspan="7" class="bg-light p-3">
+                <p><strong>Uptime (last {{ item.history|length }} checks):</strong> {{ item.uptime|floatformat:2 }}%</p>
+
+                <div class="chart-container" style="height:200px;">
+                    <canvas id="responseChart-{{ item.site.id }}"></canvas>
+                </div>
+
+                <div class="mt-2" id="uptimeBar-{{ item.site.id }}" style="display:flex; flex-wrap:wrap;">
+                    {% for status in item.status_points %}
+                        <div style="width:6px; height:20px; margin:1px; background-color:{% if status == 'Up' %}#28a745{% else %}#dc3545{% endif %};"></div>
+                    {% endfor %}
+                </div>
+
+                <!-- ✅ Add link to site history page -->
+                <div class="text-center mt-3">
+                    <a href="{% url 'site_history' item.site.id %}" class="btn btn-outline-primary btn-sm">
+                        View Full History →
+                    </a>
+                </div>
             </td>
         </tr>
         {% empty %}
@@ -86,5 +77,40 @@
         {% endfor %}
     </tbody>
 </table>
+
+<!-- ✅ Chart.js logic remains -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    {% for item in site_data %}
+    const ctx{{ item.site.id }} = document.getElementById('responseChart-{{ item.site.id }}');
+    if (ctx{{ item.site.id }}) {
+        new Chart(ctx{{ item.site.id }}, {
+            type: 'line',
+            data: {
+                labels: {{ item.timestamps|safe }},
+                datasets: [{
+                    label: 'Response Time (s)',
+                    data: {{ item.response_times|safe }},
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0,123,255,0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.25
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+    {% endfor %}
+});
+</script>
 
 {% endblock %}

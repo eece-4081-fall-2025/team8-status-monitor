@@ -80,7 +80,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'status_monitor',
         'USER': 'status_user',
-        'PASSWORD': 'changeme',  # match your psql setup
+        'PASSWORD': 'status_password',  # match your psql setup
         'HOST': 'localhost',
         'PORT': '5432',
     }

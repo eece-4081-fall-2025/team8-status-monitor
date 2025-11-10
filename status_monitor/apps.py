@@ -1,4 +1,5 @@
 from django.apps import AppConfig
+from django.db.utils import OperationalError, ProgrammingError
 import sys
 
 class StatusMonitorConfig(AppConfig):
@@ -6,6 +7,8 @@ class StatusMonitorConfig(AppConfig):
     name = 'status_monitor'
 
     def ready(self):
-        if 'runserver' in sys.argv:
-            from .tasks import start_scheduler
-            start_scheduler()
+       from .tasks import start_scheduler
+       try:
+           start_scheduler()
+       except (OperationalError, ProgrammingError):
+           print("Database not ready- scheduler will start after migrations.")
