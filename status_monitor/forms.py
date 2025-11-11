@@ -16,3 +16,6 @@ class MonitoredSiteForm(forms.ModelForm):
             raise forms.ValidationError("You are already monitoring this site.")
         return url
     
+    def clean_name(self):
+        name= self.cleaned_data.get('name', '')
+        return name.title()
