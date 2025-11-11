@@ -60,7 +60,7 @@ def logout_view(request):
 def home(request):
     return redirect('status_page')
 
-#Views for adding and editing sites
+
 @login_required(login_url='login')
 def site_list(request):
     sites = MonitoredSite.objects.filter(user=request.user)
@@ -83,12 +83,14 @@ def site_create(request):
 def site_edit(request, pk):
     site = get_object_or_404(MonitoredSite, pk=pk,user=request.user)
     if request.method == 'POST':
-        form = MonitoredSiteForm(request.POST, instance=site)
+        form = MonitoredSiteForm(request.POST, instance=site, user=request.user)
         if form.is_valid():
-            form.save()
+            site=form.save(commit=False)
+            site.user = request.user
+            site.save()
             return redirect(reverse('site_list'))
     else:
-        form = MonitoredSiteForm(instance=site)
+        form = MonitoredSiteForm(instance=site,user=request.user)
     return render(request, 'status_monitor/site_form.html', {'form': form, 'title': 'Edit Site'})
 
 @login_required(login_url='login')
