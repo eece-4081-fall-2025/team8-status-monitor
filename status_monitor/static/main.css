@@ -22,7 +22,7 @@ body, html {
     gap: 15px;
 }
 
-tr .up {
+tr.up {
     background-color: green ;
 }
 tr.down{
