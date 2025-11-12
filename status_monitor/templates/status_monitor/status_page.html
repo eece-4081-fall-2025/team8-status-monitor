@@ -4,7 +4,6 @@
 
 <h2>Dashboard</h2>
 
-{# ADD THE 'ADD SITE' BUTTON HERE, Controlled by permission #}
 {% if user.is_authenticated and user.userprofile.can_configure_sites %}
     <a href="{% url 'site_create' %}" class="btn btn-primary">+ Add Site</a>
 {% endif %}
@@ -15,19 +14,13 @@
         <th>Name</th>
         <th>URL</th>
         <th>Status</th>
-    
-        {# ADD A HEADER FOR THE ACTIONS COLUMN #}
-        <th>Actions</th> 
+        <th>Actions</th>
     </tr>
     {% for site in sites %}
-    
     <tr class="{% if site.status == 'DOWN' %}row-down{% else %}row-up{% endif %}">
-       <td>{{ site.name }}</td>
-       <td>{{ site.url }}</td>
-       <td>{{ site.status }}</td>
-       
-      
-        {# ADD THE EDIT/DELETE LINKS HERE, Controlled by permission #}
+        <td>{{ site.name }}</td>
+        <td>{{ site.url }}</td>
+        <td>{{ site.status }}</td>
         <td>
             {% if user.is_authenticated and user.userprofile.can_configure_sites %}
                 <a href="{% url 'site_edit' site.pk %}">Edit</a> |
@@ -35,96 +28,93 @@
             {% endif %}
         </td>
     </tr>
-    <!--chartrows-->
     <tr>
-        <td colspan="5">
+        <td colspan="4">
             <div class="status-bars">
                 {% for i in site.history %}
-                <span class="status-block {% if i == 'UP' %}green{% else %}red{% endif %}"></span>
-                 {% endfor %}
+                    <span class="status-block {% if i == 'UP' %}green{% else %}red{% endif %}"></span>
+                {% endfor %}
             </div>
             <canvas id="responseChart-{{ site.id }}" class="chart"></canvas>
         </td>
     </tr>
-     {% endfor %}
+    {% endfor %}
 </table>
 
-<!--including Chart.js-->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-/*object to store Chart.js instances for each site, keyed by site ID*/
-   const charts = {};
-   {% for site in sites %}
-   
-   const ctx{{ site.id }} = document.getElementById("responseChart-{{ site.id }}").getContext("2d");
-   
-   /*convers sites timestamp JSON into readable time strings for x-axis*/
-   const labels{{ site.id }} = {{ site.timestamps_json|safe}}.map(ts => {
-            const date = new Date(ts);
-            return date.toLocaleTimeString([],{ hour: '2-digit', minute: '2-digit', second: '2-digit'});
-            
-   });
-  
-   const data{{ site.id }} = {{ site.response_times_json|safe }};
-   
-   /*creating a new chart.js line chart instance*/
-   charts["{{ site.id }}"] = new Chart(ctx{{ site.id }}, {
+const charts = {};
+
+{% for site in sites %}
+const ctx{{ site.id }} = document
+    .getElementById("responseChart-{{ site.id }}")
+    .getContext("2d");
+
+const labels{{ site.id }} = {{ site.timestamps_json|safe }}.map(ts => {
+    const date = new Date(ts);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+});
+
+const data{{ site.id }} = {{ site.response_times_json|safe }};
+
+charts["{{ site.id }}"] = new Chart(ctx{{ site.id }}, {
     type: "line",
     data: {
         labels: labels{{ site.id }},
         datasets: [{
             label: "Response Time",
             data: data{{ site.id }},
-            borderColor: 'rgb(75, 192, 192)',
-            backgroundColor: 'rgba(5, 192, 192, 0.2)',
+            borderColor: "rgb(75, 192, 192)",
+            backgroundColor: "rgba(5, 192, 192, 0.2)",
             tension: 0.3,
-            fill: true,
+            fill: true
         }]
     },
     options: {
-        animation: { duration: 0},
+        animation: { duration: 0 },
         responsive: true,
         scales: {
             x: {
-                type: 'category',
-                title: {display: true, title:'Time'},
-                ticks: {
-                    maxTickLimits: 10
-                }
+                type: "category",
+                title: { display: true, text: "Time" },
+                ticks: { maxTicksLimit: 10 }
             },
             y: {
-                beginAtZero:true,
-                title: {display: true, text: 'Response Time'},
-
+                beginAtZero: true,
+                title: { display: true, text: "Response Time" }
             }
         },
         plugins: {
-            tooltip: {mode: 'index', intersect: false}
+            tooltip: { mode: "index", intersect: false }
         }
     }
-   });
-   {% endfor %}
+});
+{% endfor %}
 </script>
+
 <script>
-    /*refreashing chart data every 3 sec*/
-    setInterval(() => {
-        fetch("{% url 'status_page' %}?json=1") //call Django view with JSON output
+setInterval(() => {
+    fetch("{% url 'status_page' %}?json=1")
         .then(resp => resp.json())
         .then(data => {
             data.sites.forEach(site => {
-                const chart = charts[site.id]; //get chart instance for this site
-                if (chart) { 
+                const chart = charts[site.id];
+                if (chart) {
                     chart.data.labels = site.timestamps.map(ts => {
-                    const date = new Date(ts);
-                    return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second:'2-digit'});
-                });
-               
-                chart.data.datasets[0].data = site.response_times;
-                chart.update('none')
-            }
+                        const date = new Date(ts);
+                        return date.toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit"
+                        });
+                    });
+                    chart.data.datasets[0].data = site.response_times;
+                    chart.update("none");
+                }
+            });
         });
-    });
 }, 3000);
 </script>
+
 {% endblock %}
