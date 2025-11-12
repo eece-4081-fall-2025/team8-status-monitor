@@ -6,6 +6,9 @@ from django.contrib.auth.forms import UserCreationForm,AuthenticationForm
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.timezone import localtime,now, timedelta
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+
 #from datetime import timedelta
 from .models import  MonitoredSite
 from .forms import MonitoredSiteForm
@@ -129,3 +132,13 @@ def site_history(request,pk):
         'status_points': ['Up' if c.is_up else 'Down' for c in checks],
     }
     return render(request, 'status_monitor/site_history.html', context)
+
+@csrf_exempt
+def set_timezone(request):
+    if request.method == "POST":
+        tz = request.POST.get("timezone")
+        if tz:
+            request.session["django_timezone"] = tz
+            timezone.activate(tz)
+        return HttpResponse(status=204)
+    return HttpResponse(status=405)

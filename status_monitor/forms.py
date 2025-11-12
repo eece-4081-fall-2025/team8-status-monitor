@@ -12,7 +12,10 @@ class MonitoredSiteForm(forms.ModelForm):
 
     def clean_url(self):
         url = self.cleaned_data['url']
-        if MonitoredSite.objects.filter(url=url, user=self.user).exists():
+        qs = MonitoredSite.objects.filter(url=url, user=self.user)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
             raise forms.ValidationError("You are already monitoring this site.")
         return url
     

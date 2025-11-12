@@ -11,17 +11,39 @@
         <header class="header">
             <h1>Status Monitor</h1>
             <nav class="navbar">
-                <a href="/status">Status</a>
-                <a href="/maintenance">Maintenance</a>
-                <a href="/incidents">Incident Report</a>
-                <a href="/logout">Logout</a>
+                <a href="{% url 'status_page' %}">Status</a>
+                <a href="{% url 'maintenance_page' %}">Maintenance</a>
+                <a href="{% url 'incidents_page' %}">Incident Report</a>
+                <a href="{% url 'logout' %}">Logout</a>
             </nav>
         </header>
         <main class="content-container">
-        {% block content %}
-        {% endblock %}
+            {% block content %}
+            {% endblock %}
         </main>
+
+        <script>
+            (function () {
+                try {
+                    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                    if (!sessionStorage.getItem('tz_set')) {
+                        fetch("/set_timezone/", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/x-www-form-urlencoded",
+                                "X-CSRFToken": "{{ csrf_token }}"
+                            },
+                            body: new URLSearchParams({ timezone: tz })
+                        })
+                        .then(() => {
+                            sessionStorage.setItem('tz_set', '1');
+                            location.reload();
+                        })
+                        .catch(() => {});
+                    }
+                } catch (e) {}
+            })();
+        </script>
     </body>
-   
 </html>
 
