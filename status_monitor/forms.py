@@ -11,3 +11,13 @@ class SiteForm(forms.ModelForm):
             'url': forms.URLInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control'}),
             }
+        #must be https
+        def clean_url(self):
+            url = self.cleaned_data['url']
+        #preventing dup. urls
+            if self.user and Site.objects.filter(url=url).exists():
+                raise forms.ValidationError("This site is already being monitored")
+            #basice scheme check
+            parsed = urlparse(url)
+            if parsed.scheme not in ('https'):
+                raise forms.ValidationError("URL must start with https://")

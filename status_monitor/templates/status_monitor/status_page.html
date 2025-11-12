@@ -15,7 +15,7 @@
         <th>Name</th>
         <th>URL</th>
         <th>Status</th>
-        <th>Response Time</th>
+    
         {# ADD A HEADER FOR THE ACTIONS COLUMN #}
         <th>Actions</th> 
     </tr>
@@ -23,19 +23,10 @@
     
     <tr class="{% if site.status == 'DOWN' %}row-down{% else %}row-up{% endif %}">
        <td>{{ site.name }}</td>
-       <td><a href="{{ site.url }}" target="_blank"> {{ site.url }}</a></td>
-       <td>
-            <span id="status-dot-{{ site.id }}" class="status-dot {% if site.status == 'UP' %}green{% else %}red{% endif %}"></span>
-            <span id="status-text-{{ site.id }}">{{ site.status }}</span>
-        </td>
-
-        <!--Live response time-->
-        <td>
-            <span id="respons-time-{{ site.id }}"> {{ site.respons_time }}</span> ms
-        </td>
-
-
-        
+       <td>{{ site.url }}</td>
+       <td>{{ site.status }}</td>
+       
+      
         {# ADD THE EDIT/DELETE LINKS HERE, Controlled by permission #}
         <td>
             {% if user.is_authenticated and user.userprofile.can_configure_sites %}
@@ -47,17 +38,93 @@
     <!--chartrows-->
     <tr>
         <td colspan="5">
-            <canvas id="responseChart-{{ site.id }}" style="height: 200px;"></canvas>
+            <div class="status-bars">
+                {% for i in site.history %}
+                <span class="status-block {% if i == 'UP' %}green{% else %}red{% endif %}"></span>
+                 {% endfor %}
+            </div>
+            <canvas id="responseChart-{{ site.id }}" class="chart"></canvas>
         </td>
     </tr>
-    {% endfor %}
+     {% endfor %}
 </table>
 
-
+<!--including Chart.js-->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<script>
+/*object to store Chart.js instances for each site, keyed by site ID*/
+   const charts = {};
+   {% for site in sites %}
+   
+   const ctx{{ site.id }} = document.getElementById("responseChart-{{ site.id }}").getContext("2d");
+   
+   /*convers sites timestamp JSON into readable time strings for x-axis*/
+   const labels{{ site.id }} = {{ site.timestamps_json|safe}}.map(ts => {
+            const date = new Date(ts);
+            return date.toLocaleTimeString([],{ hour: '2-digit', minute: '2-digit', second: '2-digit'});
+            
+   });
+  
+   const data{{ site.id }} = {{ site.response_times_json|safe }};
+   
+   /*creating a new chart.js line chart instance*/
+   charts["{{ site.id }}"] = new Chart(ctx{{ site.id }}, {
+    type: "line",
+    data: {
+        labels: labels{{ site.id }},
+        datasets: [{
+            label: "Response Time",
+            data: data{{ site.id }},
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(5, 192, 192, 0.2)',
+            tension: 0.3,
+            fill: true,
+        }]
+    },
+    options: {
+        animation: { duration: 0},
+        responsive: true,
+        scales: {
+            x: {
+                type: 'category',
+                title: {display: true, title:'Time'},
+                ticks: {
+                    maxTickLimits: 10
+                }
+            },
+            y: {
+                beginAtZero:true,
+                title: {display: true, text: 'Response Time'},
 
-       
+            }
+        },
+        plugins: {
+            tooltip: {mode: 'index', intersect: false}
+        }
+    }
+   });
+   {% endfor %}
 </script>
-
+<script>
+    /*refreashing chart data every 3 sec*/
+    setInterval(() => {
+        fetch("{% url 'status_page' %}?json=1") //call Django view with JSON output
+        .then(resp => resp.json())
+        .then(data => {
+            data.sites.forEach(site => {
+                const chart = charts[site.id]; //get chart instance for this site
+                if (chart) { 
+                    chart.data.labels = site.timestamps.map(ts => {
+                    const date = new Date(ts);
+                    return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second:'2-digit'});
+                });
+               
+                chart.data.datasets[0].data = site.response_times;
+                chart.update('none')
+            }
+        });
+    });
+}, 3000);
+</script>
 {% endblock %}
