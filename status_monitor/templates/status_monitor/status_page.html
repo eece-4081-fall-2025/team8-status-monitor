@@ -10,7 +10,7 @@
 {% endif %}
 <br><br>
 
-<table>
+<table class="status-table">
     <tr>
         <th>Name</th>
         <th>URL</th>
@@ -21,11 +21,20 @@
     </tr>
     {% for site in sites %}
     
-    <tr class="{% if site.is_active and site.status == 'UP' %}up{% else %}down{% endif %}">
-        <td>{{ site.name }}</td>
-        <td>{{ site.url }}</td>
-        <td>{{ site.status }}</td>
-        <td>{{ site.response_time }}</td>
+    <tr class="{% if site.status == 'DOWN' %}row-down{% else %}row-up{% endif %}">
+       <td>{{ site.name }}</td>
+       <td><a href="{{ site.url }}" target="_blank"> {{ site.url }}</a></td>
+       <td>
+            <span id="status-dot-{{ site.id }}" class="status-dot {% if site.status == 'UP' %}green{% else %}red{% endif %}"></span>
+            <span id="status-text-{{ site.id }}">{{ site.status }}</span>
+        </td>
+
+        <!--Live response time-->
+        <td>
+            <span id="respons-time-{{ site.id }}"> {{ site.respons_time }}</span> ms
+        </td>
+
+
         
         {# ADD THE EDIT/DELETE LINKS HERE, Controlled by permission #}
         <td>
@@ -35,6 +44,20 @@
             {% endif %}
         </td>
     </tr>
+    <!--chartrows-->
+    <tr>
+        <td colspan="5">
+            <canvas id="responseChart-{{ site.id }}" style="height: 200px;"></canvas>
+        </td>
+    </tr>
     {% endfor %}
 </table>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+       
+</script>
+
 {% endblock %}
