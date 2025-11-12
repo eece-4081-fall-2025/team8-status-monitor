@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.timezone import localtime,now, timedelta
 #from datetime import timedelta
-from .models import  MonitoredSite, SiteCheckResult
+from .models import  MonitoredSite
 from .forms import MonitoredSiteForm
 
 #Begin user registration and authentication views
@@ -104,26 +104,7 @@ def site_delete(request, pk):
 @login_required(login_url='login')
 def status_page(request):
     sites = MonitoredSite.objects.filter(user=request.user).order_by('url').distinct()
-    site_data = []
-
-    for site in sites:
-        checks = SiteCheckResult.objects.filter(site=site).order_by('-timestamp')[:20][::-1]
-        latest_check=checks[-1] if checks else None
-        timestamps = [c.timestamp.strftime("%H:%M") for c in checks]
-        response_times = [c.response_time for c in checks]
-        status_points = ["Up" if c.is_up else "Down" for c in checks]
-        uptime = ((sum(1 for c in checks if c.is_up))/ len(checks) *100) if checks else 0
-        
-        site_data.append({
-            'site' : site,
-            'latest_check' : latest_check,
-            'history' : checks,
-            'timestamps' : timestamps,
-            'response_times': response_times,
-            'status_points' : status_points,
-            'uptime' : uptime,
-            
-        })
+    site_data = [site.get_status_summary(limit=20) for site in sites]
         
     return render(request, "status_monitor/status_page.html", {"site_data": site_data})
 
@@ -137,23 +118,14 @@ def incidents_page(request):
 
 @login_required(login_url='login')
 def site_history(request,pk):
-    site = get_object_or_404(MonitoredSite,pk=pk, user=request.user)
-    checks = SiteCheckResult.objects.filter(site=site).order_by('timestamp')
-    
-    total_checks = checks.count()
-    uptime = 0
-    if total_checks > 0:
-        uptime = checks.filter(is_up=True).count() / total_checks * 100
-    
-    timestamps = [c.timestamp.strftime("%Y-%m-%d %H:%M") for c in checks]
-    response_times = [float(c.response_time or 0) for c in checks]
-    status_points = ['Up' if c.is_up else "Down" for c in checks]
-    
-    context = { 
-            'site' : site,
-            'uptime' : uptime,
-            'timestamps': timestamps,
-            'response_times': response_times,
-            'status_points': status_points
-            }
-    return render(request, 'status_monitor/site_history.html',context)
+    site = get_object_or_404(MonitoredSite, pk=pk, user=request.user)
+    checks = site.check_results.order_by('timestamp')
+
+    context = {
+        'site': site,
+        'uptime': site.calculate_uptime(),
+        'timestamps': [c.timestamp.strftime("%Y-%m-%d %H:%M") for c in checks],
+        'response_times': [float(c.response_time or 0) for c in checks],
+        'status_points': ['Up' if c.is_up else 'Down' for c in checks],
+    }
+    return render(request, 'status_monitor/site_history.html', context)

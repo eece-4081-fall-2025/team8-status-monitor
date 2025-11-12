@@ -1,6 +1,8 @@
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.urls import reverse
+from status_monitor.models import MonitoredSite, SiteCheckResult
+from django.utils import timezone
 
 
 # -----------------------------
@@ -98,7 +100,7 @@ class UserLoginLogoutTests(TestCase):
             follow=True,
         )
         self.assertTrue(response.wsgi_request.user.is_authenticated)
-        self.assertContains(response, "Dashboard")
+        self.assertContains(response, "Status")
 
     def test_login_invalid_credentials(self):
         """Invalid login credentials should fail."""
@@ -153,8 +155,28 @@ class ProtectedViewTests(TestCase):
         self.client.login(username="protecteduser", password="SecurePass123!")
         response = self.client.get(self.status_url)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Dashboard")
+        self.assertContains(response, "Status")
+    
+    def test_status_page_displays_user_sites(self):
+        """Dashboard displays monitored sites and uptime data."""
+        site = MonitoredSite.objects.create(
+            name="Example Site",
+            url="https://example.com",
+            user=self.user,
+        )
+        SiteCheckResult.objects.create(
+            site=site,
+            timestamp=timezone.now(),
+            is_up=True,
+            response_time=0.15,
+        )
 
+        self.client.login(username="protecteduser", password="SecurePass123!")
+        response = self.client.get(reverse("status_page"))
+        self.assertContains(response, "Example Site")
+        self.assertIn("site_data", response.context)
+
+    
 
 # -----------------------------
 # Session Tests
