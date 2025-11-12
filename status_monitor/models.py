@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User # REQUIRED for UserProfile
 from django.db.models.signals import post_save # REQUIRED for signals
 from django.dispatch import receiver # REQUIRED for signals
-
+from django.db.models import JSONField
 class Site(models.Model):
     STATUS_CHOICES = [
         ('UP', 'UP'),
@@ -31,7 +31,11 @@ class Site(models.Model):
     last_checked = models.DateTimeField(null=True,blank = True)
 
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='UP')
-    response_ime = models.FloatField(default=0.0) #in seconds 
+    response_time = models.FloatField(default=0.0) #in seconds 
+
+    #new field to store chart history
+    response_times = JSONField(default=list, blank=True)
+    timestamps = JSONField(default=list, blank=True)
     
     def __str__(self):
         return self.name
