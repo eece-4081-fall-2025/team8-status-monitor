@@ -82,6 +82,7 @@ def check_sites():
     for site in sites:
         try: 
             start = timezone.now()
+            #attempting to open sites URL with 5 second timeout
             with urllib.request.urlopen(site.url, timeout=5) as response:
                 elapsed = (timezone.now()-start).total_seconds()
                 site.response_time = elapsed
@@ -144,7 +145,10 @@ def site_delete(request, pk):
 #for the status, maintenace and incidents
 @login_required(login_url='login')
 def status_page(request):
+    #call function to perform site check
     check_sites()
+
+    #get all site objects from database ordered alphabetically
     sites = Site.objects.all().order_by('url')
     #JSON updates
     if request.GET.get("json") == '1':
@@ -156,11 +160,14 @@ def status_page(request):
                 "response_times" : [float(rt) for rt in site.response_times[-720:]],
             })
         return JsonResponse({"sites": site_list})
+    
     #preparing JSON for charts
     for site in sites:
+        #keeping only last 720 timestamps
         site.raw_timestamps = site.timestamps[-720:]
         site.response_times = site.response_times[-720:]
 
+        #clean the responsee_time list
         site.response_times = [
             float(rt) for rt in site.response_times
             if isinstance(rt, (int, float, str)) and str(rt).replace('.', '', 1).isdigit()

@@ -49,20 +49,26 @@
      {% endfor %}
 </table>
 
-
+<!--including Chart.js-->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+/*object to store Chart.js instances for each site, keyed by site ID*/
    const charts = {};
    {% for site in sites %}
+   
    const ctx{{ site.id }} = document.getElementById("responseChart-{{ site.id }}").getContext("2d");
+   
+   /*convers sites timestamp JSON into readable time strings for x-axis*/
    const labels{{ site.id }} = {{ site.timestamps_json|safe}}.map(ts => {
             const date = new Date(ts);
             return date.toLocaleTimeString([],{ hour: '2-digit', minute: '2-digit', second: '2-digit'});
+            
    });
-
+  
    const data{{ site.id }} = {{ site.response_times_json|safe }};
    
+   /*creating a new chart.js line chart instance*/
    charts["{{ site.id }}"] = new Chart(ctx{{ site.id }}, {
     type: "line",
     data: {
@@ -101,12 +107,13 @@
    {% endfor %}
 </script>
 <script>
+    /*refreashing chart data every 3 sec*/
     setInterval(() => {
-        fetch("{% url 'status_page' %}?json=1")
+        fetch("{% url 'status_page' %}?json=1") //call Django view with JSON output
         .then(resp => resp.json())
         .then(data => {
             data.sites.forEach(site => {
-                const chart = charts[site.id];
+                const chart = charts[site.id]; //get chart instance for this site
                 if (chart) { 
                     chart.data.labels = site.timestamps.map(ts => {
                     const date = new Date(ts);
