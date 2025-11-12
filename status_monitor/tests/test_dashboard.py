@@ -13,10 +13,10 @@ class DashboardTests(TestCase):
                 username='homeusertest',
                 password='HomePass123!'
             )
-            UserProfile.objects.create(user=self.user, canConfigure=False)
+            UserProfile.objects.create(user=self.user, can_configure_sites=False)
             #admin user can configure
             self.admin_user = User.objects.create_user(username='admin', password='SecureAdminPass36!')
-            UserProfile.objects.create(user=self.user, canConfigure=True)
+            UserProfile.objects.create(user=self.user, can_configure_sites=False)
            
             #sample sites
             self.site_up = Site.objects.create(name="LocalTest", url="http://localhost:8000", status = "UP", is_active = True, response_time=10)
