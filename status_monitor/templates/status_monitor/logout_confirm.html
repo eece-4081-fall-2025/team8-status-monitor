@@ -1,11 +1,15 @@
-<!DOCTYPE html>
-<html>
-<head><title>Logout</title></head>
-<body>
-<h1>Logout</h1>
-<form method="post">
-    {% csrf_token %}
-    <button type="submit">Yes, logout</button>
-</form>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block title %}Logout{% endblock %}
+{% block content %}
+<section class="auth-container">
+    <h2>Logout</h2>
+    <p>Are you sure you want to log out?</p>
+    <form method="post">
+        {% csrf_token %}
+        <div class="button-group">
+            <button type="submit">Yes, logout</button>
+            <a href="/" class="cancel-link">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

@@ -142,6 +142,8 @@ class MaintenancePageTest(TestCase):
 
     def setUp(self):
         self.client = Client()
+
+        # normal user (cannot configure)
         self.user = User.objects.create_user(
             username="maintuser", password="MaintPass123!"
         )

@@ -1,15 +1,15 @@
-<!DOCTYPE html>
-<html>
-<head><title>Create Account</title></head>
-<body>
-<h1>Create Account</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Register</button>
-</form>
-<form action="{% url 'login' %}" method="get" style="display:inline;">
-    <button type="submit">Cancel</button>
-</form>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block title %}Create Account{% endblock %}
+{% block content %}
+<section class="auth-container">
+    <h2>Create Account</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="button-group">
+            <button type="submit">Register</button>
+            <a href="{% url 'login' %}" class="cancel-link">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

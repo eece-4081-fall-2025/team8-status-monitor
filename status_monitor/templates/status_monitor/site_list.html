@@ -2,13 +2,22 @@
 {% block title %}Sites{% endblock %}
 {% block content %}
   <h2>Monitored Sites</h2>
-  <a href="{% url 'site_create' %}" class="btn btn-primary">+ Add Site</a>
+  
+  {# Only show the Add button if the user has permission #}
+  {% if user.is_authenticated and user.userprofile.can_configure_sites %}
+    <a href="{% url 'site_create' %}" class="btn btn-primary">+ Add Site</a>
+  {% endif %}
+
   <ul>
     {% for site in sites %}
       <li>
         <strong>{{ site.name }}</strong> - <a href="{{ site.url }}">{{ site.url }}</a>
-        (<a href="{% url 'site_edit' site.pk %}">Edit</a> |
-         <a href="{% url 'site_delete' site.pk %}">Delete</a>)
+        
+        {# Only show Edit/Delete links if the user has permission #}
+        {% if user.is_authenticated and user.userprofile.can_configure_sites %}
+            (<a href="{% url 'site_edit' site.pk %}">Edit</a> |
+             <a href="{% url 'site_delete' site.pk %}">Delete</a>)
+        {% endif %}
       </li>
     {% empty %}
       <p>No sites yet.</p>

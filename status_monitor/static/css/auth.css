@@ -1,0 +1,46 @@
+.auth-container {
+    max-width: 400px;
+    margin: 4rem auto;
+    background: #ffffff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.auth-container h2 {
+    margin-bottom: 1rem;
+    color: #003366;
+}
+
+.auth-container label {
+    display: block;
+    margin-top: 1rem;
+}
+
+.auth-container input {
+    width: 100%;
+    padding: 0.5rem;
+    margin-top: 0.25rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.button-group {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.cancel-link {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background-color: #ccc;
+    color: #000;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+
+.cancel-link:hover {
+    background-color: #aaa;
+}
