@@ -5,7 +5,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm,AuthenticationForm
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.timezone import localtime,now, timedelta
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
