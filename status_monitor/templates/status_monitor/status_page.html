@@ -188,4 +188,24 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+
+<!-- Auto-refresh the status table every 60 seconds -->
+<script>
+setInterval(() => {
+    fetch(window.location.href, { headers: { "X-Requested-With": "XMLHttpRequest" } })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, "text/html");
+
+            const newTable = doc.querySelector("table.table");
+            const oldTable = document.querySelector("table.table");
+
+            if (newTable && oldTable) {
+                oldTable.innerHTML = newTable.innerHTML;
+            }
+        })
+        .catch(err => console.error("Auto-refresh error:", err));
+}, 60000); // refresh every 60 seconds
+</script>
 {% endblock %}
