@@ -51,13 +51,35 @@ const ctx{{ site.id }} = document
     .getElementById("responseChart-{{ site.id }}")
     .getContext("2d");
 
-const labels{{ site.id }} = {{ site.timestamps_json|safe }}.map(ts => {
-    const date = new Date(ts);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+//define now and 12 hours ago
+const now = new Date();
+const twelveHoursAgo = new Date(now.getTime()-12*60*60*1000);
+
+//parsing server timestamps into Date object
+let timestamps{{ site.id }} = {{ site.timestamps_json|safe }}.map(ts => new Date(ts));
+//filter to last 12
+timestamps{{ site.id }} = timestamps{{ site.id }}.filter(t => t >= twelveHoursAgo);
+
+//generate labels as local time
+let labels{{ site.id }} = timestamps{{ site.id }}.map(t => {
+    return t.toLocaleTimeString([], {
+         hour:"2-digit",
+        minute:"2-digit",
+        second:"2-digit",
+    })
 });
+labels{{ site.id }}.unshift(twelveHoursAgo.toLocaleTimeString([], {
+        hour:"2-digit",
+        minute:"2-digit",
+        second:"2-digit"}));
+labels{{ site.id }}.push(now.toLocaleTimeString([], {
+        hour:"2-digit",
+        minute:"2-digit",
+        second:"2-digit",}));
 
-const data{{ site.id }} = {{ site.response_times_json|safe }};
-
+let data{{ site.id }} = {{ site.response_times_json|safe }};
+data{{ site.id }}.unshift(null);
+data{{ site.id }}.push(null);
 charts["{{ site.id }}"] = new Chart(ctx{{ site.id }}, {
     type: "line",
     data: {
