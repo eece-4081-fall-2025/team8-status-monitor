@@ -91,7 +91,7 @@ def site_edit(request, pk):
             site=form.save(commit=False)
             site.user = request.user
             site.save()
-            return redirect(reverse('site_list'))
+            return redirect(reverse('status_page'))
     else:
         form = MonitoredSiteForm(instance=site,user=request.user)
     return render(request, 'status_monitor/site_form.html', {'form': form, 'title': 'Edit Site'})
@@ -120,14 +120,17 @@ def incidents_page(request):
     return render(request, "status_monitor/incidents_page.html")
 
 @login_required(login_url='login')
-def site_history(request,pk):
+def site_history(request, pk):
     site = get_object_or_404(MonitoredSite, pk=pk, user=request.user)
     checks = site.check_results.order_by('timestamp')
 
+    # Use the updated uptime method which requires checks
+    uptime = site.calculate_uptime(checks)
+
     context = {
         'site': site,
-        'uptime': site.calculate_uptime(),
-        'timestamps': [c.timestamp.strftime("%Y-%m-%d %H:%M") for c in checks],
+        'uptime': uptime,
+        'timestamps': [c.timestamp.isoformat() for c in checks],  # ISO timestamps
         'response_times': [float(c.response_time or 0) for c in checks],
         'status_points': ['Up' if c.is_up else 'Down' for c in checks],
     }

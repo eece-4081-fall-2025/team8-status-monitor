@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
-from django.utils.timezone import localtime
 
 
     
@@ -20,20 +19,20 @@ class MonitoredSite(models.Model):
     def get_recent_checks(self,limit=20):
         return self.check_results.order_by('-timestamp')[:limit][::-1]
     
-    def calculate_uptime(self):
-        total=self.check_results.count()
+    def calculate_uptime(self, checks):
+        total = len(checks)
         if total == 0:
             return 0.0
-        up_count = self.check_results.filter(is_up=True).count()
-        return round(up_count / total * 100,2)
+        up_count = sum(1 for c in checks if c.is_up)
+        return round(up_count / total * 100, 2)
     
 
     def get_status_summary(self, limit=20):
         checks=self.get_recent_checks(limit=limit)
-        timestamps = [localtime(c.timestamp).strftime("%H:%M") for c in checks]
-        response_time = [c.response_time for c in checks]
+        timestamps = [c.timestamp.isoformat() for c in checks]
+        response_times = [c.response_time for c in checks]
         status_points = ["Up" if c.is_up else "Down" for c in checks]
-        uptime = self.calculate_uptime()
+        uptime = self.calculate_uptime(checks)
 
         latest_check = checks[-1] if checks else None
         return {
@@ -41,7 +40,7 @@ class MonitoredSite(models.Model):
             'latest_check': latest_check,
             'history' : checks,
             'timestamps' : timestamps,
-            'response_times' : response_time,
+            'response_times' : response_times,
             'status_points' : status_points,
             'uptime' : uptime,
         }

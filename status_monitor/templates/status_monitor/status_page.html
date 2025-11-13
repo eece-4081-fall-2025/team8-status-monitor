@@ -28,35 +28,39 @@
             <td>
                 <a href="{{ item.site.url }}" target="_blank">{{ item.site.url }}</a>
             </td>
-           <!-- <td>{{ item.latest_check.timestamp|default:"Never" }}</td> -->
-          <td class="last-checked"
-            {% if item.latest_check %}
-            data-timestamp="{{ item.latest_check.timestamp|date:'c' }}"
-            {% endif %}>
-            {% if item.latest_check %}
-                {{ item.latest_check.timestamp|date:"Y-m-d H:i:s" }}
-            {% else %}
-                Never
-            {% endif %}
+
+            <!-- UTC timestamp, converted browser-side -->
+            <td class="last-checked"
+                {% if item.latest_check %}
+                data-timestamp="{{ item.latest_check.timestamp|date:'c' }}"
+                {% endif %}>
+                {% if item.latest_check %}
+                    {{ item.latest_check.timestamp|date:"c" }}
+                {% else %}
+                    Never
+                {% endif %}
             </td>
+
             <td>{{ item.latest_check.status_code|default:"—" }}</td>
             <td>{{ item.latest_check.response_time|floatformat:2|default:"—" }}</td>
+
             <td>
                 {% if item.latest_check is none %}
-                    <span class=""text-muted fw bold">
-                {% elif item.latest_check and item.latest_check.is_up %}
+                    <span class="text-muted fw-bold">—</span>
+                {% elif item.latest_check.is_up %}
                     <span class="text-success fw-bold">✅ Up</span>
                 {% else %}
                     <span class="text-danger fw-bold">❌ Down</span>
                 {% endif %}
             </td>
+
             <td>
                 <a href="{% url 'site_edit' item.site.id %}" class="btn btn-sm btn-secondary me-2">Edit</a>
                 <a href="{% url 'site_delete' item.site.id %}" class="btn btn-sm btn-danger">Remove</a>
             </td>
         </tr>
 
-        <!-- ✅ Keep charts and uptime bar, remove data table -->
+        <!-- Charts and Uptime -->
         <tr>
             <td colspan="7" class="bg-light p-3">
                 <p><strong>Uptime (last {{ item.history|length }} checks):</strong> {{ item.uptime|floatformat:2 }}%</p>
@@ -71,7 +75,6 @@
                     {% endfor %}
                 </div>
 
-                <!-- ✅ Add link to site history page -->
                 <div class="text-center mt-3">
                     <a href="{% url 'site_history' item.site.id %}" class="btn btn-outline-primary btn-sm">
                         View Full History →
@@ -87,22 +90,60 @@
     </tbody>
 </table>
 
-<!-- ✅ Chart.js logic remains -->
+<!-- JSON timestamps for each chart -->
+{% for item in site_data %}
+{{ item.timestamps|json_script:"ts_temp" }}
+<script>
+    document.getElementById("ts_temp").id = "timestamps-{{ item.site.id }}";
+</script>
+{% endfor %}
+
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     {% for item in site_data %}
-    const ctx{{ item.site.id }} = document.getElementById('responseChart-{{ item.site.id }}');
+
+    const ctx{{ item.site.id }} = document.getElementById("responseChart-{{ item.site.id }}");
     if (ctx{{ item.site.id }}) {
+
+        // Load timestamps
+        const rawTS{{ item.site.id }} = JSON.parse(
+            document.getElementById("timestamps-{{ item.site.id }}").textContent
+        );
+
+        // Convert to local timezone strings
+        const labels{{ item.site.id }} = rawTS{{ item.site.id }}.map(ts => {
+            const d = new Date(ts);
+            return d.toLocaleString(undefined, {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true
+            });
+        });
+
+        // Load response_time array
+        const rawData{{ item.site.id }} = {{ item.response_times|safe|default:"[]" }};
+
+        // Fix None/null/undefined
+        const fixedData{{ item.site.id }} = rawData{{ item.site.id }}.map(v =>
+            (v === null || v === undefined) ? null : v
+        );
+
+        // Render Chart.js
         new Chart(ctx{{ item.site.id }}, {
-            type: 'line',
+            type: "line",
             data: {
-                labels: {{ item.timestamps|safe }},
+                labels: labels{{ item.site.id }},
                 datasets: [{
-                    label: 'Response Time (s)',
-                    data: {{ item.response_times|safe }},
-                    borderColor: '#007bff',
-                    backgroundColor: 'rgba(0,123,255,0.1)',
+                    label: "Response Time (s)",
+                    data: fixedData{{ item.site.id }},
+                    borderColor: "#007bff",
+                    backgroundColor: "rgba(0,123,255,0.1)",
                     borderWidth: 2,
                     fill: true,
                     tension: 0.25
@@ -114,32 +155,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 scales: {
                     y: { beginAtZero: true }
                 },
-                plugins: { legend: { display: false } }
+                plugins: {
+                    legend: { display: false }
+                }
             }
         });
     }
+
     {% endfor %}
 });
 </script>
+
+<!-- Convert "Last Checked" UTC → Browser Local Time -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Convert all UTC timestamps to local browser time
     const timestampCells = document.querySelectorAll('.last-checked');
     timestampCells.forEach(cell => {
         const utcTime = cell.dataset.timestamp;
         if (utcTime) {
-            const localTime = new Date(utcTime);
-            // Format as "MMM D, YYYY, h:mm:ss a"
-            const options = {
-                year: 'numeric', month: 'short', day: 'numeric',
-                hour: '2-digit', minute: '2-digit', second: '2-digit',
+            const d = new Date(utcTime);
+            cell.textContent = d.toLocaleString(undefined, {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
                 hour12: true
-            };
-            cell.textContent = localTime.toLocaleString(undefined, options);
+            });
         }
     });
 });
 </script>
-
 
 {% endblock %}
