@@ -3,8 +3,12 @@
 {% block content %}
 <section class="auth-container">
     <h2>Login</h2>
-    {% if error %}
-        <div class="error">Invalid username or password</div>
+    {% if messages %}
+        <div class="alert-container">
+            {% for message in messages %}
+                <div class="alert alert-warning">{{ message }}</div>
+            {% endfor %}
+        </div>
     {% endif %}
     <form method="post">
         {% csrf_token %}

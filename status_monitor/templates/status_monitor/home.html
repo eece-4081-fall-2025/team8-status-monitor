@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block title %} Home {% endblock %}
 {% block content %}
-
-<h2> Home </h2>
-<p>Welcome to status monitor dashboard</p>
- 
-    
+<div class="container mt-4 text-center">
+    <h2>Welcome to Status Monitor Dashboard</h2>
+    <p class="lead">Track and monitor your sites in real time.</p>
+    <a href="{% url 'status_page' %}" class="btn btn-primary mt-3">Go to Dashboard</a>
+</div>
 {% endblock %}

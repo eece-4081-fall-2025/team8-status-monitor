@@ -19,9 +19,11 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path('set_timezone/', views.set_timezone, name='set_timezone'),
     path('admin/', admin.site.urls),
     path('', views.home, name='home'),
     path('sites/',views.site_list, name='site_list'),
+    path('sites/<int:pk>/history/', views.site_history, name='site_history'),
     path('sites/add/', views.site_create, name= 'site_create'),
     path('sites/<int:pk>/edit/', views.site_edit, name='site_edit'),
     path('sites/<int:pk>/delete/', views.site_delete, name='site_delete'),

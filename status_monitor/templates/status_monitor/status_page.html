@@ -2,141 +2,190 @@
 {% block title %}Status Dashboard{% endblock %}
 {% block content %}
 
-<h2>Dashboard</h2>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Status Dashboard</h2>
+    <a href="{% url 'site_create' %}" class="btn btn-primary">
+        + Add Site
+    </a>
+</div>
 
-{% if user.is_authenticated and user.userprofile.can_configure_sites %}
-    <a href="{% url 'site_create' %}" class="btn btn-primary">+ Add Site</a>
-{% endif %}
-<br><br>
+<table class="table table-striped table-hover mt-3">
+    <thead class="table-dark">
+        <tr>
+            <th>Name</th>
+            <th>URL</th>
+            <th>Last Checked</th>
+            <th>Status Code</th>
+            <th>Response Time(s)</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in site_data %}
+        <tr>
+            <td>{{ item.site.name }}</td>
+            <td>
+                <a href="{{ item.site.url }}" target="_blank">{{ item.site.url }}</a>
+            </td>
 
-<table class="status-table">
-    <tr>
-        <th>Name</th>
-        <th>URL</th>
-        <th>Status</th>
-        <th>Actions</th>
-    </tr>
-    {% for site in sites %}
-    <tr class="{% if site.status == 'DOWN' %}row-down{% else %}row-up{% endif %}">
-        <td>{{ site.name }}</td>
-        <td>{{ site.url }}</td>
-        <td>{{ site.status }}</td>
-        <td>
-            {% if user.is_authenticated and user.userprofile.can_configure_sites %}
-                <a href="{% url 'site_edit' site.pk %}">Edit</a> |
-                <a href="{% url 'site_delete' site.pk %}">Delete</a>
-            {% endif %}
-        </td>
-    </tr>
-    <tr>
-        <td colspan="4">
-            <div class="status-bars">
-                {% for i in site.history %}
-                    <span class="status-block {% if i == 'UP' %}green{% else %}red{% endif %}"></span>
-                {% endfor %}
-            </div>
-            <canvas id="responseChart-{{ site.id }}" class="chart"></canvas>
-        </td>
-    </tr>
-    {% endfor %}
+            <!-- UTC timestamp, converted browser-side -->
+            <td class="last-checked"
+                {% if item.latest_check %}
+                data-timestamp="{{ item.latest_check.timestamp|date:'c' }}"
+                {% endif %}>
+                {% if item.latest_check %}
+                    {{ item.latest_check.timestamp|date:"c" }}
+                {% else %}
+                    Never
+                {% endif %}
+            </td>
+
+            <td>{{ item.latest_check.status_code|default:"—" }}</td>
+            <td>{{ item.latest_check.response_time|floatformat:2|default:"—" }}</td>
+
+            <td>
+                {% if item.latest_check is none %}
+                    <span class="text-muted fw-bold">—</span>
+                {% elif item.latest_check.is_up %}
+                    <span class="text-success fw-bold">✅ Up</span>
+                {% else %}
+                    <span class="text-danger fw-bold">❌ Down</span>
+                {% endif %}
+            </td>
+
+            <td>
+                <a href="{% url 'site_edit' item.site.id %}" class="btn btn-sm btn-secondary me-2">Edit</a>
+                <a href="{% url 'site_delete' item.site.id %}" class="btn btn-sm btn-danger">Remove</a>
+            </td>
+        </tr>
+
+        <!-- Charts and Uptime -->
+        <tr>
+            <td colspan="7" class="bg-light p-3">
+                <p><strong>Uptime (last {{ item.history|length }} checks):</strong> {{ item.uptime|floatformat:2 }}%</p>
+
+                <div class="chart-container" style="height:200px;">
+                    <canvas id="responseChart-{{ item.site.id }}"></canvas>
+                </div>
+
+                <div class="mt-2" id="uptimeBar-{{ item.site.id }}" style="display:flex; flex-wrap:wrap;">
+                    {% for status in item.status_points %}
+                        <div style="width:6px; height:20px; margin:1px; background-color:{% if status == 'Up' %}#28a745{% else %}#dc3545{% endif %};"></div>
+                    {% endfor %}
+                </div>
+
+                <div class="text-center mt-3">
+                    <a href="{% url 'site_history' item.site.id %}" class="btn btn-outline-primary btn-sm">
+                        View Full History →
+                    </a>
+                </div>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" class="text-center text-muted">No monitored sites yet.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
 </table>
 
+<!-- JSON timestamps for each chart -->
+{% for item in site_data %}
+{{ item.timestamps|json_script:"ts_temp" }}
+<script>
+    document.getElementById("ts_temp").id = "timestamps-{{ item.site.id }}";
+</script>
+{% endfor %}
+
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-const charts = {};
+document.addEventListener('DOMContentLoaded', () => {
+    {% for item in site_data %}
 
-{% for site in sites %}
-const ctx{{ site.id }} = document
-    .getElementById("responseChart-{{ site.id }}")
-    .getContext("2d");
+    const ctx{{ item.site.id }} = document.getElementById("responseChart-{{ item.site.id }}");
+    if (ctx{{ item.site.id }}) {
 
-//define now and 12 hours ago
-const now = new Date();
-const twelveHoursAgo = new Date(now.getTime()-12*60*60*1000);
+        // Load timestamps
+        const rawTS{{ item.site.id }} = JSON.parse(
+            document.getElementById("timestamps-{{ item.site.id }}").textContent
+        );
 
-//parsing server timestamps into Date object
-let timestamps{{ site.id }} = {{ site.timestamps_json|safe }}.map(ts => new Date(ts));
-//filter to last 12
-timestamps{{ site.id }} = timestamps{{ site.id }}.filter(t => t >= twelveHoursAgo);
-
-//generate labels as local time
-let labels{{ site.id }} = timestamps{{ site.id }}.map(t => {
-    return t.toLocaleTimeString([], {
-         hour:"2-digit",
-        minute:"2-digit",
-        second:"2-digit",
-    })
-});
-labels{{ site.id }}.unshift(twelveHoursAgo.toLocaleTimeString([], {
-        hour:"2-digit",
-        minute:"2-digit",
-        second:"2-digit"}));
-labels{{ site.id }}.push(now.toLocaleTimeString([], {
-        hour:"2-digit",
-        minute:"2-digit",
-        second:"2-digit",}));
-
-let data{{ site.id }} = {{ site.response_times_json|safe }};
-data{{ site.id }}.unshift(null);
-data{{ site.id }}.push(null);
-charts["{{ site.id }}"] = new Chart(ctx{{ site.id }}, {
-    type: "line",
-    data: {
-        labels: labels{{ site.id }},
-        datasets: [{
-            label: "Response Time",
-            data: data{{ site.id }},
-            borderColor: "rgb(75, 192, 192)",
-            backgroundColor: "rgba(5, 192, 192, 0.2)",
-            tension: 0.3,
-            fill: true
-        }]
-    },
-    options: {
-        animation: { duration: 0 },
-        responsive: true,
-        scales: {
-            x: {
-                type: "category",
-                title: { display: true, text: "Time" },
-                ticks: { maxTicksLimit: 10 }
-            },
-            y: {
-                beginAtZero: true,
-                title: { display: true, text: "Response Time" }
-            }
-        },
-        plugins: {
-            tooltip: { mode: "index", intersect: false }
-        }
-    }
-});
-{% endfor %}
-</script>
-
-<script>
-setInterval(() => {
-    fetch("{% url 'status_page' %}?json=1")
-        .then(resp => resp.json())
-        .then(data => {
-            data.sites.forEach(site => {
-                const chart = charts[site.id];
-                if (chart) {
-                    chart.data.labels = site.timestamps.map(ts => {
-                        const date = new Date(ts);
-                        return date.toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            second: "2-digit"
-                        });
-                    });
-                    chart.data.datasets[0].data = site.response_times;
-                    chart.update("none");
-                }
+        // Convert to local timezone strings
+        const labels{{ item.site.id }} = rawTS{{ item.site.id }}.map(ts => {
+            const d = new Date(ts);
+            return d.toLocaleString(undefined, {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true
             });
         });
-}, 3000);
+
+        // Load response_time array
+        const rawData{{ item.site.id }} = {{ item.response_times|safe|default:"[]" }};
+
+        // Fix None/null/undefined
+        const fixedData{{ item.site.id }} = rawData{{ item.site.id }}.map(v =>
+            (v === null || v === undefined) ? null : v
+        );
+
+        // Render Chart.js
+        new Chart(ctx{{ item.site.id }}, {
+            type: "line",
+            data: {
+                labels: labels{{ item.site.id }},
+                datasets: [{
+                    label: "Response Time (s)",
+                    data: fixedData{{ item.site.id }},
+                    borderColor: "#007bff",
+                    backgroundColor: "rgba(0,123,255,0.1)",
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.25
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+
+    {% endfor %}
+});
+</script>
+
+<!-- Convert "Last Checked" UTC → Browser Local Time -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const timestampCells = document.querySelectorAll('.last-checked');
+    timestampCells.forEach(cell => {
+        const utcTime = cell.dataset.timestamp;
+        if (utcTime) {
+            const d = new Date(utcTime);
+            cell.textContent = d.toLocaleString(undefined, {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+        }
+    });
+});
 </script>
 
 {% endblock %}

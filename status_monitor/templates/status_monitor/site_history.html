@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>{{ site.name }} — History</h2>
+  <p>Uptime (last {{ timestamps|length }} checks): <strong>{{ uptime|floatformat:2 }}%</strong></p>
+  <p><a href="{% url 'status_page' %}">&larr; Back to Dashboard</a></p>
+
+  <canvas id="responseChart" height="100"></canvas>
+
+  <h4 class="mt-4">Uptime History</h4>
+  <div id="uptimeBar" class="uptime-bar">
+    {% for status in status_points %}
+      <div class="uptime-dot {% if status == 'Up' %}up{% else %}down{% endif %}"></div>
+    {% endfor %}
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('responseChart');
+const responseChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: {{ timestamps|safe }},
+        datasets: [{
+            label: 'Response Time (s)',
+            data: {{ response_times|safe }},
+            borderColor: '#007bff',
+            borderWidth: 1,
+            tension: 0.2,
+            fill: false
+        }]
+    },
+    options: {
+        scales: {
+            y: { beginAtZero: true }
+        }
+    }
+});
+</script>
+{% endblock %}
