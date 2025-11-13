@@ -1,36 +1,14 @@
-<!DOCTYPE html>
-<html>
-<head><title>Login</title></head>
-<body>
-<h1>Login</h1>
-{% if error %}<div>Invalid</div>{% endif %}
-<form method="post" action="?{% if next %}next={{ next }}{% endif %}">
-    {% csrf_token %}
-    <label>Username: <input name="username"></label><br>
-    <label>Password: <input type="password" name="password"></label><br>
-    {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
-    <button type="submit">Login</button>
-</form>
-{% if messages %}
-  {% for message in messages %}
-    <div class="alert alert-danger">{{ message }}</div>
-  {% endfor %}
-{% endif %}
-
-<p>
-    <a href="{% url 'register' %}">
-        <button type="button">Register</button>
-    </a>
-</p>
-</body>
-</html>
 {% extends 'base.html' %}
 {% block title %}Login{% endblock %}
 {% block content %}
 <section class="auth-container">
     <h2>Login</h2>
-    {% if error %}
-        <div class="error">Invalid username or password</div>
+    {% if messages %}
+        <div class="alert-container">
+            {% for message in messages %}
+                <div class="alert alert-warning">{{ message }}</div>
+            {% endfor %}
+        </div>
     {% endif %}
     <form method="post">
         {% csrf_token %}

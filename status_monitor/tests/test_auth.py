@@ -137,7 +137,9 @@ class ProtectedViewTests(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.home_url = reverse('status_page')
+        self.status_url = reverse("status_page")
+        self.home_url = self.status_url
+        self.login_url = reverse("login")
         self.user = User.objects.create_user(
             username="protecteduser",
             password="SecurePass123!",
@@ -145,7 +147,7 @@ class ProtectedViewTests(TestCase):
 
     def test_home_accessible_when_logged_in(self):
         """Test home (status dashboard) is accessible when logged in"""
-        logged_in = self.client.login(username='testuser', password='SecurePass123!')
+        logged_in = self.client.login(username='protecteduser', password='SecurePass123!')
         self.assertTrue(logged_in, "Login failed — check credentials.")
         response = self.client.get(self.home_url)
         self.assertEqual(response.status_code, 200)
@@ -154,7 +156,8 @@ class ProtectedViewTests(TestCase):
     def test_home_requires_login(self):
         """Test home redirects to login when not authenticated"""
         response = self.client.get(self.home_url)
-        self.status_url = reverse("status_page")
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/login/", response.url)
 
     def test_redirect_when_not_authenticated(self):
         """Anonymous user should be redirected to login."""
