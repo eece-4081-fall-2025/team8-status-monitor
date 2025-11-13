@@ -1,3 +1,10 @@
+from django.test import TestCase, Client
+from django.contrib.auth.models import User
+from django.urls import reverse
+from ..models import Site, UserProfile
+
+
+
 class DashboardTests(TestCase):
     def setUp(self):
         self.client = Client()
@@ -41,13 +48,15 @@ class DashboardTests(TestCase):
         self.site_edit_url = reverse("site_edit", args=[self.site_up.pk])
         self.site_delete_url = reverse("site_delete", args=[self.site_up.pk])
 
-    def test_home_page_loads_successfully(self):
+def test_home_page_loads_successfully(self):
+        self.client.login(username='homeusertest', password='HomePass123!')
         response = self.client.get(self.home_url)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Status Monitor")
-
-    def test_site_status_css(self):
-        self.client.login(username="homeusertest", password="HomePass123!")
-        response = self.client.get(self.home_url)
-        self.assertContains(response, 'class="up"')
-        self.assertContains(response, 'class="down"')
+        
+def test_site_status_css(self):
+    self.client.login(username='homeusertest', password='HomePass123!')
+    response = self.client.get(self.home_url)
+    self.assertEqual(response.status_code, 200)
+    self.assertContains(response, 'class="row-up"')
+    self.assertContains(response, 'class="row-down"')
