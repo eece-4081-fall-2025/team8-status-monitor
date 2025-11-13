@@ -1,6 +1,7 @@
 from django import forms
 from .models import MonitoredSite
 
+
 class MonitoredSiteForm(forms.ModelForm):
     class Meta:
         model = MonitoredSite

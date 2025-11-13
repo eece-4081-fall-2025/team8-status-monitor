@@ -1,8 +1,16 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils import timezone
 
 
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='userprofile')
+    can_configure_sites = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.user.username} Profile"
     
 class MonitoredSite(models.Model):
     name = models.CharField(max_length = 100)
@@ -28,21 +36,19 @@ class MonitoredSite(models.Model):
     
 
     def get_status_summary(self, limit=20):
-        checks=self.get_recent_checks(limit=limit)
-        timestamps = [c.timestamp.isoformat() for c in checks]
-        response_times = [c.response_time for c in checks]
-        status_points = ["Up" if c.is_up else "Down" for c in checks]
-        uptime = self.calculate_uptime(checks)
+        checks = self.get_recent_checks(limit)
 
-        latest_check = checks[-1] if checks else None
         return {
-            'site' : self,
-            'latest_check': latest_check,
-            'history' : checks,
-            'timestamps' : timestamps,
-            'response_times' : response_times,
-            'status_points' : status_points,
-            'uptime' : uptime,
+            "site": self,
+            "latest_check": checks[-1] if checks else None,
+            "history": list(checks),
+            "timestamps": [c.timestamp.isoformat() for c in checks],
+            "response_times": [
+                float(c.response_time) if c.response_time is not None else None
+                for c in checks
+            ],
+            "status_points": ["Up" if c.is_up else "Down" for c in checks],
+            "uptime": self.calculate_uptime(checks),
         }
     
 class SiteCheckResult(models.Model):
@@ -54,3 +60,13 @@ class SiteCheckResult(models.Model):
     
     def __str__(self):
         return f"{self.site.name} - {self.timestamp} - {self.status_code}"
+
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+        
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.userprofile.save()
