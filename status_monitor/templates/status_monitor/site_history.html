@@ -15,13 +15,30 @@
   </div>
 </div>
 
+<script>
+// Raw timestamps passed from Django
+const rawTS = {{ timestamps|safe }};
+
+// Convert ISO timestamps into readable local timezone strings
+const formattedTS = rawTS.map(ts => {
+    const d = new Date(ts);
+    return d.toLocaleString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true
+    });
+});
+</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 const ctx = document.getElementById('responseChart');
 const responseChart = new Chart(ctx, {
     type: 'line',
     data: {
-        labels: {{ timestamps|safe }},
+        labels: formattedTS,
         datasets: [{
             label: 'Response Time (s)',
             data: {{ response_times|safe }},
