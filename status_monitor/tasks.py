@@ -52,6 +52,8 @@ def check_sites():
                 response_time=response_time,
                 is_up=is_up
             )
+        print(f"✓ Checked {site.url}: UP={is_up}, status={status_code}, time={response_time:.3f}s")
+                
 def start_scheduler():
     global scheduler_started
     if scheduler_started:
