@@ -166,28 +166,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-<!-- Convert "Last Checked" UTC → Browser Local Time -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const timestampCells = document.querySelectorAll('.last-checked');
-    timestampCells.forEach(cell => {
-        const utcTime = cell.dataset.timestamp;
-        if (utcTime) {
-            const d = new Date(utcTime);
-            cell.textContent = d.toLocaleString(undefined, {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true
-            });
-        }
-    });
-});
-</script>
-
 
 <!-- Auto-refresh the status table every 60 seconds -->
 <script>
@@ -207,5 +185,14 @@ setInterval(() => {
         })
         .catch(err => console.error("Auto-refresh error:", err));
 }, 60000); // refresh every 60 seconds
+</script>
+
+<!-- Auto-refresh when tab becomes active -->
+<script>
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+        location.reload();
+    }
+});
 </script>
 {% endblock %}
