@@ -6,12 +6,17 @@ import requests, time
 from django.db.utils import OperationalError
 import sys
 
+scheduler_started = False
+
 MAX_RETRIES = 5
 
 def check_sites():
     monitored_sites = MonitoredSite.objects.all()
     for site in monitored_sites:
         start_time = time.time()
+        response_time = None
+        response_time = None
+        is_up = False
         try:
             response = requests.get(site.url, timeout=10)
             response_time = time.time() - start_time
@@ -30,9 +35,12 @@ def check_sites():
             is_up=is_up
         )
 def start_scheduler():
+    global scheduler_started
+    if scheduler_started:
+        print("⏩ Scheduler already running.")
+        return
     try:
         scheduler = BackgroundScheduler()
-        scheduler.add_jobstore(DjangoJobStore(), 'default')
         scheduler.add_job(
             check_sites,
             'interval',
@@ -42,6 +50,7 @@ def start_scheduler():
         )
         if "runserver" in sys.argv:
             scheduler.start()
+            scheduler_started = True
             print("✅ APScheduler started successfully!")
     except OperationalError:
         print("⚠️ Database not ready, APScheduler will start after migrations.")
