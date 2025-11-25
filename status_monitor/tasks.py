@@ -45,13 +45,13 @@ def check_sites():
         if response_time is None:
             response_time = time.time() - start_time
 
-            SiteCheckResult.objects.create(
-                site=site,
-                timestamp=timezone.now(),
-                status_code=status_code,
-                response_time=response_time,
-                is_up=is_up
-            )
+        SiteCheckResult.objects.create(
+            site=site,
+            timestamp=timezone.now(),
+            status_code=status_code,
+            response_time=response_time,
+            is_up=is_up
+        )
         print(f"✓ Checked {site.url}: UP={is_up}, status={status_code}, time={response_time:.3f}s")
                 
 def start_scheduler():
