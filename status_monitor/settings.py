@@ -79,12 +79,8 @@ WSGI_APPLICATION = 'status_monitor.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'status_monitor',
-        'USER': 'status_user',
-        'PASSWORD': 'status_password',  # match your psql setup
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
