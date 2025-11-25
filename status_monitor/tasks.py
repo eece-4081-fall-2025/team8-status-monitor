@@ -17,23 +17,41 @@ def check_sites():
         response_time = None
         response_time = None
         is_up = False
-        try:
-            response = requests.get(site.url, timeout=10)
-            response_time = time.time() - start_time
-            is_up = 200 <= response.status_code < 400
-            status_code = response.status_code
-        except requests.RequestException:
-            response_time = time.time() - start_time
-            is_up = False
-            status_code = None
+        
+        for attempt in range(MAX_RETRIES):
+            try:
+                response = requests.get(site.url, timeout=10, headers ={"User-Agent" : "StatusMonitor/1.0"})
+                response_time = time.time() - start_time
+                status_code = response.status_code
+                is_up = 200 <= response.status_code < 400
+                break
+               
+            except requests.Timeout:
+                print(f"⏳ Timeout checking {site.url} (attempt {attempt + 1}/{MAX_RETRIES})")
+                time.sleep(0.5 * (attempt + 1))
 
-        SiteCheckResult.objects.create(
-            site=site,
-            timestamp=timezone.now(),
-            status_code=status_code,
-            response_time=response_time,
-            is_up=is_up
-        )
+            except requests.ConnectionError:
+                print(f"🔌 ConnectionError for {site.url} (attempt {attempt + 1}/{MAX_RETRIES})")
+                time.sleep(0.5 * (attempt + 1))
+
+            except requests.exceptions.SSLError:
+                print(f"🔐 SSL error for {site.url}")
+                break  # retrying won't help SSL errors
+
+            except requests.RequestException as e:
+                print(f"⚠️ General HTTP error on {site.url}: {e}")
+                time.sleep(0.5 * (attempt + 1))
+                
+        if response_time is None:
+            response_time = time.time() - start_time
+
+            SiteCheckResult.objects.create(
+                site=site,
+                timestamp=timezone.now(),
+                status_code=status_code,
+                response_time=response_time,
+                is_up=is_up
+            )
 def start_scheduler():
     global scheduler_started
     if scheduler_started:
