@@ -159,6 +159,7 @@ def site_history(request, pk):
         'timestamps': [timezone.localtime(c.timestamp).isoformat() for c in checks],  # ISO in active timezone to match status_page
         'response_times': [float(c.response_time or 0) for c in checks],
         'status_points': ['Up' if c.is_up else 'Down' for c in checks],
+        'checks': checks,
     }
     return render(request, 'status_monitor/site_history.html', context)
 

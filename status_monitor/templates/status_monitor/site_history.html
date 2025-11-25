@@ -1,5 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
+<style>
+  table.check-history th,
+  table.check-history td {
+      text-align: center;
+      padding: 0.75rem;
+  }
+  table.check-history td .badge {
+      font-size: 0.9rem;
+      padding: 0.4rem 0.6rem;
+  }
+</style>
 <div class="container mt-4">
   <h2>{{ site.name }} — History</h2>
   <p>Uptime (last {{ timestamps|length }} checks): <strong>{{ uptime|floatformat:2 }}%</strong></p>
@@ -14,6 +25,34 @@
     {% endfor %}
   </div>
 </div>
+
+<h4 class="mt-4">Detailed Check History</h4>
+<table class="table table-striped table-bordered mt-3 check-history">
+  <thead>
+    <tr>
+      <th>Timestamp</th>
+      <th>Status Code</th>
+      <th>Response Time(s)</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for c in checks %}
+      <tr>
+        <td class="ts-cell" data-ts="{{ c.timestamp|date:"c" }}"></td>
+        <td>{{ c.status_code }}</td>
+        <td>{{ c.response_time|floatformat:3 }}</td>
+        <td>
+          {% if c.is_up %}
+            <span class="badge bg-success">Up</span>
+          {% else %}
+            <span class="badge bg-danger">Down</span>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
 
 <script>
 // Raw timestamps passed from Django
@@ -53,6 +92,24 @@ const responseChart = new Chart(ctx, {
             y: { beginAtZero: true }
         }
     }
+});
+</script>
+<script>
+// Apply same JS timestamp formatting to table cells
+document.addEventListener("DOMContentLoaded", () => {
+    const cells = document.querySelectorAll(".ts-cell");
+    cells.forEach(cell => {
+        const raw = cell.dataset.ts;
+        const d = new Date(raw);
+        cell.textContent = d.toLocaleString(undefined, {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true
+        });
+    });
 });
 </script>
 {% endblock %}
