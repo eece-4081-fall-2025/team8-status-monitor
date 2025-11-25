@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm,AuthenticationForm
+from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 from django.http import HttpResponse
@@ -128,9 +129,13 @@ def site_delete(request, pk):
 
 @login_required(login_url='login')
 def status_page(request):
+    max_frequency = MonitoredSite.objects.aggregate(max_freq=models.Max('check_frequency'))['max_freq'] or 5
     sites = MonitoredSite.objects.filter(user=request.user).order_by('url').distinct()
     site_data = [site.get_status_summary(limit=20) for site in sites]
-    return render(request, "status_monitor/status_page.html", {"site_data": site_data})
+    return render(request, "status_monitor/status_page.html", {
+        "site_data": site_data,
+        "max_frequency": max_frequency,
+    })
 
 @login_required
 def maintenance_page(request):
