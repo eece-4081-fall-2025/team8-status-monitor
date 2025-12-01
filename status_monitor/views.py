@@ -9,18 +9,15 @@ from django.utils import timezone
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-#from datetime import timedelta
 from .models import  MonitoredSite
 from .models import UserProfile
 from .forms import MonitoredSiteForm
 
-# --- New Decorator to Enforce Configuration Permission ---
 def configuration_required(view_func):
     def _wrapped_view_func(request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect('login')
 
-        # Auto-create profile safely
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
 
         if not profile.can_configure_sites:
@@ -29,9 +26,7 @@ def configuration_required(view_func):
 
         return view_func(request, *args, **kwargs)
     return _wrapped_view_func
-# -------------------------------------------------------
 
-#Begin user registration and authentication views
 def register(request):
     if request.user.is_authenticated:
         return redirect(reverse('status_page'))
@@ -86,11 +81,10 @@ def site_list(request):
     sites = MonitoredSite.objects.filter(user=request.user)
     return render(request, 'status_monitor/site_list.html', {'sites': sites})
 
-@configuration_required  # NEW DECORATOR APPLIED
+@configuration_required 
 def site_create(request):
     if request.method == 'POST':
         form = MonitoredSiteForm(request.POST, user=request.user)
-        # Handle duplicate URLs gracefully: redirect instead of re-rendering form
         if not form.is_valid():
             if "You are already monitoring this site." in str(form.errors):
                 messages.info(request, "You are already monitoring this site.")
@@ -105,7 +99,7 @@ def site_create(request):
         form = MonitoredSiteForm(user=request.user)
     return render(request, 'status_monitor/site_form.html', {'form': form, 'title': 'Add Site'})
 
-@configuration_required # NEW DECORATOR APPLIED
+@configuration_required
 def site_edit(request, pk):
     site = get_object_or_404(MonitoredSite, pk=pk,user=request.user)
     if request.method == 'POST':
@@ -119,7 +113,7 @@ def site_edit(request, pk):
         form = MonitoredSiteForm(instance=site,user=request.user)
     return render(request, 'status_monitor/site_form.html', {'form': form, 'title': 'Edit Site'})
 
-@configuration_required # NEW DECORATOR APPLIED
+@configuration_required
 def site_delete(request, pk):
     site = get_object_or_404(MonitoredSite, pk=pk, user=request.user)
     if request.method == 'POST':
@@ -149,14 +143,12 @@ def incidents_page(request):
 def site_history(request, pk):
     site = get_object_or_404(MonitoredSite, pk=pk, user=request.user)
     checks = site.check_results.order_by('timestamp')
-
-    # Use the updated uptime method which requires checks
     uptime = site.calculate_uptime(checks)
 
     context = {
         'site': site,
         'uptime': uptime,
-        'timestamps': [timezone.localtime(c.timestamp).isoformat() for c in checks],  # ISO in active timezone to match status_page
+        'timestamps': [timezone.localtime(c.timestamp).isoformat() for c in checks], 
         'response_times': [float(c.response_time or 0) for c in checks],
         'status_points': ['Up' if c.is_up else 'Down' for c in checks],
         'checks': checks,

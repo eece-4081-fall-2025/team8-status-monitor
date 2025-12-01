@@ -90,7 +90,6 @@
     </tbody>
 </table>
 
-<!-- JSON timestamps for each chart -->
 {% for item in site_data %}
 {{ item.timestamps|json_script:"ts_temp" }}
 <script>
@@ -98,7 +97,6 @@
 </script>
 {% endfor %}
 
-<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
@@ -108,12 +106,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const ctx{{ item.site.id }} = document.getElementById("responseChart-{{ item.site.id }}");
     if (ctx{{ item.site.id }}) {
 
-        // Load timestamps
         const rawTS{{ item.site.id }} = JSON.parse(
             document.getElementById("timestamps-{{ item.site.id }}").textContent
         );
 
-        // Convert to local timezone strings
         const labels{{ item.site.id }} = rawTS{{ item.site.id }}.map(ts => {
             const d = new Date(ts);
             return d.toLocaleString(undefined, {
@@ -126,15 +122,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Load response_time array
         const rawData{{ item.site.id }} = {{ item.response_times|safe|default:"[]" }};
 
-        // Fix None/null/undefined
         const fixedData{{ item.site.id }} = rawData{{ item.site.id }}.map(v =>
             (v === null || v === undefined) ? null : v
         );
 
-        // Render Chart.js
         new Chart(ctx{{ item.site.id }}, {
             type: "line",
             data: {
@@ -189,7 +182,6 @@ setInterval(() => {
 }, intervalMs);
 </script>
 
-<!-- Auto-refresh when tab becomes active -->
 <script>
 document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
