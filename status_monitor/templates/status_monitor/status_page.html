@@ -163,23 +163,12 @@ document.addEventListener('DOMContentLoaded', () => {
 <!-- Auto-refresh based on longest check_frequency -->
 <script>
 const intervalMs = {{ max_frequency }} * 60 * 1000;
+const bufferSeconds = 6;
 
-setInterval(() => {
-    fetch(window.location.href, { headers: { "X-Requested-With": "XMLHttpRequest" } })
-        .then(response => response.text())
-        .then(html => {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, "text/html");
-
-            const newTable = doc.querySelector("table.table");
-            const oldTable = document.querySelector("table.table");
-
-            if (newTable && oldTable) {
-                oldTable.innerHTML = newTable.innerHTML;
-            }
-        })
-        .catch(err => console.error("Auto-refresh error:", err));
-}, intervalMs);
+setTimeout(() => {
+    console.log("Auto-refreshing status page...");
+    location.reload();
+}, intervalMs + bufferSeconds * 1000);
 </script>
 
 <script>
