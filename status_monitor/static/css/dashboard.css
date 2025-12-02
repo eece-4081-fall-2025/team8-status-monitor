@@ -65,3 +65,47 @@
 .red {
     background-color: red !important;
 }
+
+.actions-cell {
+    text-align: right;
+}
+
+.actions-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 90px; /* keeps consistent button width */
+}
+
+.action-btn {
+    display: block;
+    text-align: center;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+/* Edit button */
+.edit-btn {
+    background-color: #e9ecef;
+    color: #495057;
+    border: 1px solid #ced4da;
+}
+
+.edit-btn:hover {
+    background-color: #dee2e6;
+}
+
+/* Delete button */
+.delete-btn {
+    background-color: #ffe3e3;
+    color: #c92a2a;
+    border: 1px solid #ffa8a8;
+}
+
+.delete-btn:hover {
+    background-color: #ffc9c9;
+}
