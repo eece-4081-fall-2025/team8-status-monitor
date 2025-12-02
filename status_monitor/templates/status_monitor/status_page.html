@@ -9,7 +9,7 @@
     </a>
 </div>
 
-<table class="table table-striped table-hover mt-3">
+<table class="status-table table">
     <thead class="table-dark">
         <tr>
             <th>Name</th>
@@ -40,7 +40,6 @@
                 {% endif %}
             </td>
 
-            <td>{{ item.latest_check.status_code|default:"—" }}</td>
             <td>
                 {% if item.latest_check %}
                     {{ item.latest_check.response_time_ms }} ms
@@ -196,48 +195,6 @@ document.addEventListener("visibilitychange", () => {
     }
 });
 </script>
-
-<script>
-    setInterval(() => {
-        fetch(window.location.href, { headers: { "X-Requested-With": "XMLHttpRequest" } })
-            .then(response => response.text())
-            .then(html => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, "text/html");
-    
-                {% for item in site_data %}
-                const newTS = doc.getElementById("timestamps-{{ item.site.id }}");
-                if (!newTS) continue;
-    
-                const timestamps = JSON.parse(newTS.textContent);
-                const labels = timestamps.map(ts => {
-                    const d = new Date(ts);
-                    return d.toLocaleString(undefined, {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true
-                    });
-                });
-    
-                const responseData = {{ item.response_times|safe|default:"[]" }};
-                const fixedData = responseData.map(v =>
-                    (v === null || v === undefined) ? null : v
-                );
-    
-                const chartObj = window["chart{{ item.site.id }}"];
-                if (chartObj) {
-                    chartObj.data.labels = labels;
-                    chartObj.data.datasets[0].data = fixedData;
-                    chartObj.update();
-                }
-                {% endfor %}
-            })
-            .catch(err => console.error("Chart refresh error:", err));
-    }, 15000);
-    </script>
     
 
 {% endblock %}
