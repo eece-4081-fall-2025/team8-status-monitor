@@ -64,7 +64,7 @@ def start_scheduler():
         scheduler.add_job(
             check_sites,
             'interval',
-            minutes=5,
+            seconds=10,
             name='check_sites_job',
             replace_existing=True
         )

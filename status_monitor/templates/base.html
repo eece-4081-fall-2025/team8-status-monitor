@@ -7,14 +7,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>{% block title %}Status Monitor{% endblock %}</title>
         <link rel="stylesheet" href="{% static 'css/main.css' %}">
+        <link rel="icon" href="data:,">
     </head>
     <body>
         <header class="header">
             <h1>Status Monitor</h1>
             <nav class="navbar">
                 <a href="{% url 'status_page' %}">Status</a>
-                <a href="{% url 'maintenance_page' %}">Maintenance</a>
-                <a href="{% url 'incidents_page' %}">Incident Report</a>
                 <a href="{% url 'logout' %}">Logout</a>
             </nav>
         </header>
@@ -47,6 +46,48 @@
                 } catch (e) {}
             })();
         </script>
+
+        <script>
+            setInterval(() => {
+                fetch(window.location.href, { headers: { "X-Requested-With": "XMLHttpRequest" } })
+                    .then(response => response.text())
+                    .then(html => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, "text/html");
+            
+                        const siteIds = [
+                            {% for item in site_data %}
+                                {{ item.site.id }},
+                            {% endfor %}
+                        ];
+            
+                        for (const id of siteIds) {
+                            const newTS = doc.getElementById("timestamps-" + id);
+                            if (!newTS) { continue; }
+            
+                            const timestamps = JSON.parse(newTS.textContent);
+            
+                            const chartObj = window["chart" + id];
+                            if (chartObj) {
+                                const labels = timestamps.map(ts =>
+                                    new Date(ts).toLocaleString(undefined, {
+                                        year: "numeric",
+                                        month: "short",
+                                        day: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                        second: "2-digit"
+                                    })
+                                );
+                                chartObj.data.labels = labels;
+                                chartObj.update();
+                            }
+                        }
+                    })
+                    .catch(err => console.error("Chart refresh error:", err));
+            }, 15000);
+            </script>
+
 
     </body>
 </html>

@@ -24,21 +24,7 @@ Make sure the virtual environment is active, then run
 ```bash
 pip install -r requirements.txt
 ```
-
-### Initialize the SQLite Database
-From the project root:
-```bash
-python manage.py migrate
-```
-
-If you want to reset the database:
-```bash
-rm db.sqlite3
-python manage.py migrate
-```
-
-4. Start the development server
-From the project root:
+4. Run server
 ```bash
 python manage.py runserver
 ```

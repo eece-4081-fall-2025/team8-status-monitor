@@ -58,6 +58,12 @@ class SiteCheckResult(models.Model):
     response_time = models.FloatField(help_text="Response time in seconds")
     is_up = models.BooleanField(default= False)
     
+    @property
+    def response_time_ms(self):
+        if self.response_time is None:
+            return None
+        return int(self.response_time * 1000)
+    
     def __str__(self):
         return f"{self.site.name} - {self.timestamp} - {self.status_code}"
 

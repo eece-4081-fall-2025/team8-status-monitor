@@ -9,13 +9,12 @@
     </a>
 </div>
 
-<table class="table table-striped table-hover mt-3">
+<table class="status-table table">
     <thead class="table-dark">
         <tr>
             <th>Name</th>
             <th>URL</th>
             <th>Last Checked</th>
-            <th>Status Code</th>
             <th>Response Time(s)</th>
             <th>Status</th>
             <th>Actions</th>
@@ -35,14 +34,19 @@
                 data-timestamp="{{ item.latest_check.timestamp|date:'c' }}"
                 {% endif %}>
                 {% if item.latest_check %}
-                    {{ item.latest_check.timestamp|date:"c" }}
+                    {{ item.latest_check.timestamp|date:"d-m-y h:i:s A" }}
                 {% else %}
                     Never
                 {% endif %}
             </td>
 
-            <td>{{ item.latest_check.status_code|default:"—" }}</td>
-            <td>{{ item.latest_check.response_time|floatformat:2|default:"—" }}</td>
+            <td>
+                {% if item.latest_check %}
+                    {{ item.latest_check.response_time_ms }} ms
+                {% else %}
+                    —
+                {% endif %}
+            </td>
 
             <td>
                 {% if item.latest_check is none %}
@@ -54,9 +58,11 @@
                 {% endif %}
             </td>
 
-            <td>
-                <a href="{% url 'site_edit' item.site.id %}" class="btn btn-sm btn-secondary me-2">Edit</a>
-                <a href="{% url 'site_delete' item.site.id %}" class="btn btn-sm btn-danger">Remove</a>
+            <td class="actions-cell">
+                <div class="actions-vertical">
+                    <a href="{% url 'site_edit' item.site.id %}" class="action-btn edit-btn">Edit</a>
+                    <a href="{% url 'site_delete' item.site.id %}" class="action-btn delete-btn">Remove</a>
+                </div>
             </td>
         </tr>
 
@@ -133,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data: {
                 labels: labels{{ item.site.id }},
                 datasets: [{
-                    label: "Response Time (s)",
+                    label: "Response Time (ms)",
                     data: fixedData{{ item.site.id }},
                     borderColor: "#007bff",
                     backgroundColor: "rgba(0,123,255,0.1)",
@@ -189,4 +195,6 @@ document.addEventListener("visibilitychange", () => {
     }
 });
 </script>
+    
+
 {% endblock %}
